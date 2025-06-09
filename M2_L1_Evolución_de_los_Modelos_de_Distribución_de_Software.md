@@ -133,5 +133,3 @@ Se opta por un enfoque mixto, combinando varios modelos según el componente:
 
 
 ---
-
-© Proyecto de Arquitectura de Software - E-commerce
