@@ -9,7 +9,7 @@ Aquí te presento el flujo de tu aplicación de restaurantes, mostrando lo que s
 ```mermaid
 graph LR
     subgraph Tu Equipo/Desarrollador
-        A[Tu Código de la App de Restaurantes] --> B{Instalar OS, DB, Web Server};
+        A[Tu Codigo de la App de Restaurantes] --> B{Instalar OS, DB, Web Server};
         B --> C[Configurar Red, Seguridad];
         C --> D[Desplegar App y Dependencias];
     end
@@ -19,12 +19,12 @@ graph LR
     end
 
     subgraph Usuario Final (Restaurante)
-        F[Accede a la App vía Web/Móvil]
+        F[Accede a la App via Web/Movil]
     end
 
     D -- "Corre sobre" --> E
-    D -- "Accesible vía Internet" --> F
-    E -- "Tú gestionas y configuras todo" --> B
+    D -- "Accesible via Internet" --> F
+    E -- "Tu gestionas y configuras todo" --> B
     F -- "Usa tu App (que es tu SaaS)" --> D
 
 style A fill:#BDE0FE,stroke:#36A9FF,stroke-width:2px
@@ -47,25 +47,25 @@ style F fill:#FFFACD,stroke:#FFD700,stroke-width:2px
 ```mermaid
 graph LR
     subgraph Tu Equipo/Desarrollador
-        A[Tu Código de la App de Restaurantes] --> B{Push a la Plataforma PaaS};
+        A[Tu Codigo de la App de Restaurantes] --> B{Push a la Plataforma PaaS};
     end
 
     subgraph Proveedor PaaS (ej. Heroku, Azure App Service, Google App Engine)
-        C[Entorno de Ejecución (Python, Node.js, etc.)]
+        C[Entorno de Ejecucion (Python, Node.js, etc.)]
         D[Bases de Datos gestionadas]
         E[Servidores Web, Balanceadores]
-        F[Gestión Automática de Infraestructura Subyacente (IaaS)]
+        F[Gestion Automatica de Infraestructura Subyacente (IaaS)]
     end
 
     subgraph Usuario Final (Restaurante)
-        G[Accede a la App vía Web/Móvil]
+        G[Accede a la App via Web/Movil]
     end
 
     B -- "El PaaS gestiona todo" --> C
     B -- "El PaaS gestiona todo" --> D
     B -- "El PaaS gestiona todo" --> E
     C & D & E -- "Corre sobre" --> F
-    C -- "Tu App 'vive' aquí" --> G
+    C -- "Tu App 'vive' aqui" --> G
     G -- "Usa tu App (que es tu SaaS)" --> C
 
 style A fill:#BDE0FE,stroke:#36A9FF,stroke-width:2px
@@ -88,7 +88,7 @@ style G fill:#FFFACD,stroke:#FFD700,stroke-width:2px
 
 ```mermaid
 graph LR
-    subgraph Proveedor de tu App (Tú)
+    subgraph Proveedor de tu App (Tu)
         A[Gestiona y Mantiene la App] --> B[Actualiza la App];
     end
 
@@ -97,12 +97,11 @@ graph LR
     end
 
     subgraph Usuario Final (Restaurante)
-        D[Accede a la App vía Web/Móvil]
+        D[Accede a la App via Web/Movil]
     end
 
     A -- "Ofrece y Mantiene" --> C
     B -- "Actualiza y Mejora" --> C
-    C -- "Consumido por" --> D
     D -- "Usa las Funcionalidades de la App" --> C
 
 style A fill:#F5F5DC,stroke:#C6C69C,stroke-width:2px
@@ -122,21 +121,21 @@ style D fill:#FFFACD,stroke:#FFD700,stroke-width:2px
 ```mermaid
 graph LR
     subgraph Tu Equipo/Desarrollador
-        A[Tu Código de una Función (ej. "Enviar SMS de Pedido")]
+        A[Tu Codigo de una Funcion (ej. "Enviar SMS de Pedido")]
     end
 
     subgraph Proveedor FaaS (ej. AWS Lambda, Azure Functions, Google Cloud Functions)
-        B[Evento (ej. Nuevo Pedido Recibido)] --> C{Ejecuta la Función};
+        B[Evento (ej. Nuevo Pedido Recibido)] --> C{Ejecuta la Funcion};
         C -- "Se apaga al terminar" --> D[No hay servidores que gestionar permanentemente]
     end
 
     subgraph Usuario Final (Restaurante / Cliente de App)
-        E[Confirma Pedido / Recibe Notificación]
+        E[Confirma Pedido / Recibe Notificacion]
     end
 
-    A -- "Desplegas solo la Función" --> C
-    C -- "Resultado de la Función" --> E
-    B -- "Dispara la Ejecución" --> C
+    A -- "Desplegas solo la Funcion" --> C
+    C -- "Resultado de la Funcion" --> E
+    B -- "Dispara la Ejecucion" --> C
 
 style A fill:#BDE0FE,stroke:#36A9FF,stroke-width:2px
 style B fill:#D3D3D3,stroke:#A9A9A9,stroke-width:2px
