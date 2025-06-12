@@ -27,7 +27,23 @@
 La aplicación está compuesta por un frontend web estático para los clientes, y un backend serverless para manejar pedidos. El módulo de gestión accede a las mismas APIs, pero con autenticación y roles diferenciados.
 
 ### 4.2 Diagrama de arquitectura
-![Diagrama de Arquitectura](ruta/diagrama.png)
+```mermaid
+graph TD
+  U[🧑 Usuario] --> CDN[🌐 CDN (CloudFront)]
+  CDN --> FE[💻 Frontend (React/Next.js)]
+  FE --> AG[🔀 API Gateway]
+
+  AG --> MSU[👤 Microservicio: Usuarios]
+  AG --> MSP[📦 Microservicio: Productos]
+  AG --> MSPay[💳 Microservicio: Pagos]
+
+  MSU --> DB1[(🗄️ Azure SQL)]
+  MSP --> DB2[(🌌 Cosmos DB)]
+  MSPay --> Stripe[🔐 Stripe (Pasarela de Pagos)]
+
+  AG --> Redis[(⚡ Redis Cache)]
+  AG --> Monitor[📈 Azure Monitor]
+```
 
 ### 4.3 Componentes principales
 | Componente         | Servicio AWS             | Descripción                            |

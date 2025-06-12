@@ -23,7 +23,10 @@ Breve descripción del objetivo del sistema, los usuarios clave y el problema qu
 Explicación textual de la arquitectura, cómo interactúan los componentes.
 
 ### 4.2 Diagrama de arquitectura
-![Diagrama de Arquitectura](ruta/diagrama.png)
+```mermaid
+graph TD
+
+```
 
 *Incluir servicios como EC2, Lambda, RDS, S3, VPC, etc.*
 
