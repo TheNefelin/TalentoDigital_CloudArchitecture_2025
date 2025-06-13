@@ -124,7 +124,7 @@ graph TD
         A[Tu Codigo de una Funcion ej. Enviar SMS de Pedido]
     end
 
-    subgraph Proveedor FaaS ej. AWS Lambda, Azure Functions, Google Cloud Functions
+    subgraph Proveedor FaaS ej. -AWS Lambda -Azure Functions -Google Cloud Functions
         B[Evento ej. Nuevo Pedido Recibido] --> C{Ejecuta la Funcion};
         C -- "Se apaga al terminar" --> D[No hay servidores que gestionar permanentemente]
     end
