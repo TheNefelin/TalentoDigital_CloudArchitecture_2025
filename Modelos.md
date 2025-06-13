@@ -27,12 +27,12 @@ graph TD
     E -- "Tu gestionas y configuras todo" --> B
     F -- "Usa tu App (que es tu SaaS)" --> D
 
-style A fill:#BDE0FE,stroke:#36A9FF,stroke-width:2px
-style B fill:#F5F5DC,stroke:#C6C69C,stroke-width:2px
-style C fill:#F5F5DC,stroke:#C6C69C,stroke-width:2px
-style D fill:#A0D9B1,stroke:#6CCF8D,stroke-width:2px
-style E fill:#D3D3D3,stroke:#A9A9A9,stroke-width:2px
-style F fill:#FFFACD,stroke:#FFD700,stroke-width:2px  
+style A fill:#6495ED,stroke:#1E488C,stroke-width:2px; color:#FFFFFF
+style B fill:#8B0000,stroke:#5A0000,stroke-width:2px; color:#FFFFFF
+style C fill:#8B0000,stroke:#5A0000,stroke-width:2px; color:#FFFFFF
+style D fill:#228B22,stroke:#145214,stroke-width:2px; color:#FFFFFF
+style E fill:#4F4F4F,stroke:#333333,stroke-width:2px; color:#FFFFFF
+style F fill:#FF8C00,stroke:#CC7000,stroke-width:2px; color:#FFFFFF
 ```
 
 ### Explicación IaaS:
@@ -68,13 +68,13 @@ graph TD
     C -- "Tu App 'vive' aqui" --> G
     G -- "Usa tu App (que es tu SaaS)" --> C
 
-style A fill:#BDE0FE,stroke:#36A9FF,stroke-width:2px
-style B fill:#A0D9B1,stroke:#6CCF8D,stroke-width:2px
-style C fill:#D3D3D3,stroke:#A9A9A9,stroke-width:2px
-style D fill:#D3D3D3,stroke:#A9A9A9,stroke-width:2px
-style E fill:#D3D3D3,stroke:#A9A9A9,stroke-width:2px
-style F fill:#F5F5DC,stroke:#C6C69C,stroke-width:2px
-style G fill:#FFFACD,stroke:#FFD700,stroke-width:2px
+style A fill:#6495ED,stroke:#1E488C,stroke-width:2px; color:#FFFFFF
+style B fill:#228B22,stroke:#145214,stroke-width:2px; color:#FFFFFF
+style C fill:#4F4F4F,stroke:#333333,stroke-width:2px; color:#FFFFFF
+style D fill:#4F4F4F,stroke:#333333,stroke-width:2px; color:#FFFFFF
+style E fill:#4F4F4F,stroke:#333333,stroke-width:2px; color:#FFFFFF
+style F fill:#8B0000,stroke:#5A0000,stroke-width:2px; color:#FFFFFF
+style G fill:#FF8C00,stroke:#CC7000,stroke-width:2px; color:#FFFFFF
 ```
 
 ### Explicación PaaS:
@@ -88,11 +88,11 @@ style G fill:#FFFACD,stroke:#FFD700,stroke-width:2px
 
 ```mermaid
 graph TD
-    subgraph Proveedor de tu App (Tu)
+    subgraph Proveedor de tu App
         A[Gestiona y Mantiene la App] --> B[Actualiza la App];
     end
 
-    subgraph Tu App (el SaaS)
+    subgraph Tu App el SaaS
         C[App de Restaurantes Funcionando]
     end
 
@@ -104,10 +104,10 @@ graph TD
     B -- "Actualiza y Mejora" --> C
     D -- "Usa las Funcionalidades de la App" --> C
 
-style A fill:#F5F5DC,stroke:#C6C69C,stroke-width:2px
-style B fill:#F5F5DC,stroke:#C6C69C,stroke-width:2px
-style C fill:#A0D9B1,stroke:#6CCF8D,stroke-width:2px
-style D fill:#FFFACD,stroke:#FFD700,stroke-width:2px
+style A fill:#8B0000,stroke:#5A0000,stroke-width:2px; color:#FFFFFF
+style B fill:#8B0000,stroke:#5A0000,stroke-width:2px; color:#FFFFFF
+style C fill:#228B22,stroke:#145214,stroke-width:2px; color:#FFFFFF
+style D fill:#FF8C00,stroke:#CC7000,stroke-width:2px; color:#FFFFFF
 ```
 
 ## Explicación SaaS:
@@ -121,15 +121,15 @@ style D fill:#FFFACD,stroke:#FFD700,stroke-width:2px
 ```mermaid
 graph TD
     subgraph Tu Equipo/Desarrollador
-        A[Tu Codigo de una Funcion (ej. Enviar SMS de Pedido)]
+        A[Tu Codigo de una Funcion ej. Enviar SMS de Pedido]
     end
 
-    subgraph Proveedor FaaS
-        B[Evento (ej. Nuevo Pedido Recibido)] --> C{Ejecuta la Funcion};
+    subgraph Proveedor FaaS ej. AWS Lambda, Azure Functions, Google Cloud Functions
+        B[Evento ej. Nuevo Pedido Recibido] --> C{Ejecuta la Funcion};
         C -- "Se apaga al terminar" --> D[No hay servidores que gestionar permanentemente]
     end
 
-    subgraph Usuario Final (Restaurante / Cliente de App)
+    subgraph Usuario Final Restaurante / Cliente de App
         E[Confirma Pedido / Recibe Notificacion]
     end
 
@@ -137,11 +137,11 @@ graph TD
     C -- "Resultado de la Funcion" --> E
     B -- "Dispara la Ejecucion" --> C
 
-style A fill:#BDE0FE,stroke:#36A9FF,stroke-width:2px
-style B fill:#D3D3D3,stroke:#A9A9A9,stroke-width:2px
-style C fill:#A0D9B1,stroke:#6CCF8D,stroke-width:2px
-style D fill:#F5F5DC,stroke:#C6C69C,stroke-width:2px
-style E fill:#FFFACD,stroke:#FFD700,stroke-width:2px
+style A fill:#6495ED,stroke:#1E488C,stroke-width:2px; color:#FFFFFF
+style B fill:#4F4F4F,stroke:#333333,stroke-width:2px; color:#FFFFFF
+style C fill:#228B22,stroke:#145214,stroke-width:2px; color:#FFFFFF
+style D fill:#8B0000,stroke:#5A0000,stroke-width:2px; color:#FFFFFF
+style E fill:#FF8C00,stroke:#CC7000,stroke-width:2px; color:#FFFFFF
 ```
 
 ## Explicación FaaS:
