@@ -7,18 +7,18 @@ Aquí te presento el flujo de tu aplicación de restaurantes, mostrando lo que s
 ## 1. Modelo IaaS (Infraestructura como Servicio)
 
 ```mermaid
-graph LR
+graph TD
     subgraph Tu Equipo/Desarrollador
         A[Tu Codigo de la App de Restaurantes] --> B{Instalar OS, DB, Web Server};
         B --> C[Configurar Red, Seguridad];
         C --> D[Desplegar App y Dependencias];
     end
 
-    subgraph Proveedor IaaS (ej. AWS EC2, Azure VM, Google Compute Engine)
+    subgraph Proveedor IaaS
         E[Servidores Virtuales, Almacenamiento, Redes]
     end
 
-    subgraph Usuario Final (Restaurante)
+    subgraph Usuario Final
         F[Accede a la App via Web/Movil]
     end
 
@@ -32,7 +32,7 @@ style B fill:#F5F5DC,stroke:#C6C69C,stroke-width:2px
 style C fill:#F5F5DC,stroke:#C6C69C,stroke-width:2px
 style D fill:#A0D9B1,stroke:#6CCF8D,stroke-width:2px
 style E fill:#D3D3D3,stroke:#A9A9A9,stroke-width:2px
-style F fill:#FFFACD,stroke:#FFD700,stroke-width:2px
+style F fill:#FFFACD,stroke:#FFD700,stroke-width:2px  
 ```
 
 ### Explicación IaaS:
@@ -45,19 +45,19 @@ style F fill:#FFFACD,stroke:#FFD700,stroke-width:2px
 ## 2. Modelo PaaS (Plataforma como Servicio)
 
 ```mermaid
-graph LR
+graph TD
     subgraph Tu Equipo/Desarrollador
         A[Tu Codigo de la App de Restaurantes] --> B{Push a la Plataforma PaaS};
     end
 
-    subgraph Proveedor PaaS (ej. Heroku, Azure App Service, Google App Engine)
-        C[Entorno de Ejecucion (Python, Node.js, etc.)]
+    subgraph Proveedor PaaS
+        C[Entorno de Ejecucion Python, Node.js, etc.]
         D[Bases de Datos gestionadas]
         E[Servidores Web, Balanceadores]
-        F[Gestion Automatica de Infraestructura Subyacente (IaaS)]
+        F[Gestion Automatica de Infraestructura Subyacente IaaS]
     end
 
-    subgraph Usuario Final (Restaurante)
+    subgraph Usuario Final
         G[Accede a la App via Web/Movil]
     end
 
@@ -87,7 +87,7 @@ style G fill:#FFFACD,stroke:#FFD700,stroke-width:2px
 ## 3. Modelo SaaS (Software como Servicio)
 
 ```mermaid
-graph LR
+graph TD
     subgraph Proveedor de tu App (Tu)
         A[Gestiona y Mantiene la App] --> B[Actualiza la App];
     end
@@ -96,7 +96,7 @@ graph LR
         C[App de Restaurantes Funcionando]
     end
 
-    subgraph Usuario Final (Restaurante)
+    subgraph Usuario Final
         D[Accede a la App via Web/Movil]
     end
 
@@ -119,12 +119,12 @@ style D fill:#FFFACD,stroke:#FFD700,stroke-width:2px
 ## 4. Modelo FaaS (Función como Servicio)
 
 ```mermaid
-graph LR
+graph TD
     subgraph Tu Equipo/Desarrollador
-        A[Tu Codigo de una Funcion (ej. "Enviar SMS de Pedido")]
+        A[Tu Codigo de una Funcion (ej. Enviar SMS de Pedido)]
     end
 
-    subgraph Proveedor FaaS (ej. AWS Lambda, Azure Functions, Google Cloud Functions)
+    subgraph Proveedor FaaS
         B[Evento (ej. Nuevo Pedido Recibido)] --> C{Ejecuta la Funcion};
         C -- "Se apaga al terminar" --> D[No hay servidores que gestionar permanentemente]
     end
