@@ -262,11 +262,28 @@ graph TD
     J -- "Accede" --> B
     J -- "Accede" --> I
 
-    L -- "Autoriza" --> E, F, G, I
-    K -- "Autentica Clientes" --> A, D
-    O -- "Controla Tráfico" --> E, F, G, H, I
-    N -- "Contiene" --> E, F, G, H, I, O
-    P -- "Monitorea" --> E, F, G, H, I
+    L -- "Autoriza" --> E
+    L -- "Autoriza" --> F
+    L -- "Autoriza" --> G
+    L -- "Autoriza" --> I
+    K -- "Autentica Clientes" --> A
+    K -- "Autentica Clientes" --> D
+    O -- "Controla Tráfico" --> E
+    O -- "Controla Tráfico" --> F
+    O -- "Controla Tráfico" --> G
+    O -- "Controla Tráfico" --> H
+    O -- "Controla Tráfico" --> I
+    N -- "Contiene" --> E
+    N -- "Contiene" --> F
+    N -- "Contiene" --> G
+    N -- "Contiene" --> H
+    N -- "Contiene" --> I
+    N -- "Contiene" --> O
+    P -- "Monitorea" --> E
+    P -- "Monitorea" --> F
+    P -- "Monitorea" --> G
+    P -- "Monitorea" --> H
+    P -- "Monitorea" --> I
     Q -- "Audita" --> L
 ```
 
