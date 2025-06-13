@@ -195,7 +195,7 @@ La aplicación se construirá con una arquitectura de microservicios. El fronten
 ### 4.2 Diagrama de Arquitectura
 ```mermaid
 graph TD
-    subgraph Cliente (Web/Móvil)
+    subgraph Cliente - Web/Móvil
         A[Navegador/App Móvil]
     end
 
@@ -211,7 +211,7 @@ graph TD
         D[API Gateway - Puntos de Acceso para Clientes]
     end
 
-    subgraph Lógica de Negocio (Serverless)
+    subgraph Lógica de Negocio - Serverless
         E[AWS Lambda - Microservicio Pedidos]
         F[AWS Lambda - Microservicio Menu]
         G[AWS Lambda - Microservicio Pagos]
@@ -221,7 +221,7 @@ graph TD
         H[Amazon RDS - MySQL para Transacciones]
     end
 
-    subgraph Personal del Bar (Interfaz Admin)
+    subgraph Personal del Bar - Interfaz Admin
         I[Backend Admin - AWS Elastic Beanstalk]
         J[Frontend Admin - S3 + CloudFront]
     end
