@@ -40,6 +40,16 @@ Los modelos de servicio en la nube (**IaaS, PaaS, SaaS, FaaS**) permiten a las e
 
 ---
 
+## 4.1 Ejemplo Roles
+| Modelo  | Ejemplos       | Rol Principal            | Responsabilidades Típicas                  |
+|---------|----------------|--------------------------|--------------------------------------------|
+| **IaaS**| AWS EC2        | Administrador IaaS              | - Gestionar VMs y redes<br>- Parches de SO |
+| **PaaS**| Azure App Service | Desarrollador PaaS (Devs)             | - Desplegar apps<br>- Optimizar escalado   |
+| **SaaS**| Google Workspace | Especialista SaaS    | - Onboarding usuarios<br>- SSO             |
+| **FaaS**| GCP Cloud Functions | Arquitecto FaaS   | - Diseñar triggers<br>- Monitorear ejecuciones |
+
+---
+
 ## **5. Consideraciones de Costos**  
 - **IaaS**: Costo por horas de VM + almacenamiento + transferencia de datos.  
 - **PaaS**: Precio basado en recursos consumidos (CPU, memoria) + servicios adicionales (DB, APIs).  

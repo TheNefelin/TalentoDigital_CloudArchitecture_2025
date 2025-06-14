@@ -54,7 +54,7 @@ Estos modelos definen el nivel de abstracción y, por lo tanto, tu nivel de resp
 
 ---
 
-### 3.1 Comparación de Responsabilidades: ¿Quién Gestiona Qué?
+### 3.2 Comparación de Responsabilidades: ¿Quién Gestiona Qué?
 
 Esta tabla es crucial para entender la diferencia entre los modelos de servicio desde la perspectiva de tu responsabilidad como usuario/desarrollador.
 
@@ -70,6 +70,17 @@ Esta tabla es crucial para entender la diferencia entre los modelos de servicio 
 | **Datos y Configuración de Uso** | **Tú** | **Tú** | **Tú** | **Tú** | **Tú (almacenados y gestionados por el proveedor)** |
 
 > **Nota:** En **SaaS**, eres dueño de tus datos (los subes, los creas, los controlas), pero el proveedor es responsable de la infraestructura y el software que los aloja, cifra, y te permite acceder. Es vital revisar sus políticas de seguridad y privacidad.
+
+---
+
+## 3.3 Ejemplo Roles
+| Modelo  | Ejemplos       | Rol Principal            | Responsabilidades Típicas                  |
+|---------|----------------|--------------------------|--------------------------------------------|
+| **IaaS**| AWS EC2        | Administrador IaaS              | - Gestionar VMs y redes<br>- Parches de SO |
+| **PaaS**| Azure App Service | Desarrollador PaaS (Devs)             | - Desplegar apps<br>- Optimizar escalado   |
+| **SaaS**| Google Workspace | Especialista SaaS    | - Onboarding usuarios<br>- SSO             |
+| **FaaS**| GCP Cloud Functions | Arquitecto FaaS   | - Diseñar triggers<br>- Monitorear ejecuciones |
+
 
 ---
 
