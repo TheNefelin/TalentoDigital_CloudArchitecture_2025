@@ -11,7 +11,6 @@
 #   •Rol de ejecución: elija Uso de un rol existente.
 #   •Rol existente: elija LabRole
 
-
 import json
 
 def lambda_handler(event, context):
@@ -30,7 +29,6 @@ def lambda_handler(event, context):
       'statusCode': 400,
       'body': json.dumps('Email address is not valid!')
     }
-
 
 #Funcion que valida el correo utilizando regex
 def validate_email(email):

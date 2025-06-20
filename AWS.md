@@ -378,22 +378,4 @@ graph TD
 | Complejidad en la integración de pagos. | Medio    | Usar SDKs y frameworks bien documentados; pruebas exhaustivas.    |
 | Costos iniciales más altos de lo esperado si no se optimiza. | Medio    | Monitoreo constante de costos con AWS Cost Explorer; usar Free Tier al inicio. |
 
-## 11. Anexos
--   Enlaces a la documentación oficial de cada servicio de AWS.
--   Referencias a patrones de arquitectura serverless o de microservicios.
--   Diagramas de flujo de proceso más detallados para pedidos y administración.
-
----
-
-## 📚 Recomendaciones Finales de Aprendizaje
-
--   ✅ **Practica en AWS Free Tier**: La mejor manera de aprender es haciendo. Crea una API con Lambda + API Gateway + DynamoDB.
--   ✅ **Realiza laboratorios en:** [AWS Skill Builder](https://skillbuilder.aws), [Qwiklabs](https://www.qwiklabs.com/) y los laboratorios de Azure.
--   ✅ **Preguntas clave en cada proyecto**:
-    -   ¿Qué parte es infraestructura y cuál es aplicación?
-    -   ¿Qué parte puedo automatizar (IaC, CI/CD)?
-    -   ¿Dónde están los riesgos de seguridad y cómo se mitigan?
-    -   ¿Se puede escalar esto sin rediseñar todo?
-    -   ¿Cómo se monitoreará el sistema para asegurar su operación?
-
 ---

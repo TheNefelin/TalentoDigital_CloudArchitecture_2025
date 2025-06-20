@@ -73,7 +73,7 @@ Los modelos de implementación en la nube determinan **dónde y cómo** se despl
 
 ## **📌 Recursos Adicionales**  
 - [AWS Well-Architected Framework](https://aws.amazon.com/architecture/well-architected/)  
-- [Microsoft Cloud Adoption Framework](https://aka.ms/cloudadoption)  
+- [Microsoft Cloud Adoption Framework](https://azure.microsoft.com/es-es/solutions/azure-essentials/cloud-adoption-framework)  
 
 ---
 
