@@ -91,6 +91,4 @@ Este análisis propone una estrategia de arquitectura en la nube que asegura:
 - Cumplimiento estricto de HIPAA mediante servicios certificados.
 - Uso intensivo de **Amazon RDS, Lambda y S3** para operaciones críticas.
 
-📚 Referencia: [Cerner on AWS Case Study](https://aws.amazon.com/es/solutions/)
-
 ---

@@ -167,7 +167,3 @@ Encapsulan aplicaciones y sus dependencias en entornos portátiles.
 * **Combinaciones:** Spotify (microservicios + contenedores), Uber (serverless + microservicios).
 
 ---
-
-## Cierre
-
-El diseño arquitectónico es clave para sistemas eficientes, escalables y seguros. La elección del modelo depende de factores como escalabilidad, complejidad, presupuesto y seguridad. Monolíticos son viables para sistemas estables; microservicios ofrecen flexibilidad y escalado; serverless elimina gestión de servidores; y contenedores permiten despliegues eficientes y portátiles. Mantenerse actualizado con las tendencias y mejores prácticas es fundamental para construir sistemas resilientes en la era digital.

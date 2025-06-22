@@ -45,6 +45,3 @@
 - **Airbnb:** Gestión de demanda dinámica.  
 
 ---
-
-### **Conclusión**  
-La nube impulsa la transformación digital con recursos escalables, seguros y rentables. Su adopción sigue creciendo con tecnologías como IA y serverless.  

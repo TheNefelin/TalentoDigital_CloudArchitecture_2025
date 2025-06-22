@@ -169,7 +169,3 @@ Empresas líderes han combinado estos atributos para ofrecer servicios fiables:
     * Seguridad multinivel y gestión de identidades.
 
 ---
-
-## Cierre
-
-Los atributos de calidad (resiliencia, escalabilidad y seguridad) son esenciales para arquitecturas en la nube eficientes y robustas. La resiliencia garantiza operatividad ante fallos, la escalabilidad adapta recursos a la demanda, y la seguridad protege datos y accesos. Las empresas líderes demuestran que su combinación ofrece servicios fiables a nivel global, optimizando riesgos y costos. Es crucial adoptar estrategias que refuercen estos principios en cualquier sistema en la nube para construir soluciones efectivas en la era digital.

@@ -94,7 +94,3 @@ Para seleccionar el modelo más adecuado, considera los siguientes factores:
 * **Airbnb (Nube Pública):** Google Cloud para escalar su plataforma de reservas sin inversión en hardware.
 
 ---
-
-## Cierre
-
-La elección del modelo de implementación en la nube es una decisión estratégica que impacta la eficiencia operativa, la seguridad y los costos. Cada modelo tiene sus ventajas y limitaciones, y la decisión debe basarse en un análisis detallado de las necesidades de la organización. La tendencia futura apunta hacia un aumento en el uso de **nubes híbridas**, buscando el equilibrio entre seguridad y flexibilidad.

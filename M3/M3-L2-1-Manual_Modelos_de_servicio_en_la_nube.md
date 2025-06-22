@@ -80,8 +80,3 @@
 - **FaaS**: Google Cloud Functions, AWS Lambda.
 
 ---
-
-## 🎯 Cierre
-- Los modelos de servicio en la nube permiten **optimizar costos y recursos** según necesidades.
-- La elección depende del **nivel de control requerido** (desde infraestructura hasta aplicaciones listas).
-- Combinados con IA/IoT, seguirán impulsando la **transformación digital**.
