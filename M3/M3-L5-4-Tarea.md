@@ -107,7 +107,7 @@ Explica cómo cada mejora propuesta contribuye a mejorar un atributo de calidad:
 - **AWS KMS** (Key Management Service) permite cifrado de datos en reposo y en tránsito para **RDS**, **S3** y más.
 - **AWS ACM** habilita certificados TLS/HTTPS fácilmente para cifrado en tránsito.
 - **S3 Bucket** Policies y Bloqueo de acceso público aseguran los objetos privados.
-- **S3 Bucket** Policies y Bloqueo de acceso público aseguran los objetos privados.
+
 
 ### 💡 **Visibilidad y monitoreo**  
 > Proporciona herramientas para detectar problemas y anticiparse a incidentes.
