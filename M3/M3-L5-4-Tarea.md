@@ -50,19 +50,21 @@ graph TD
 
 ```mermaid
 graph TD
-    A[Usuarios] --> B[Route 53 Failover (con Health Checks)]
+    A[Usuarios] --> B[Route 53 Failover con Health Checks]
     B --> C1[Región A]
     B --> C2[Región B]
 
     subgraph Región A
-        C1 --> A1[Elastic Beanstalk (AZ1+AZ2)]
-        A1 --> B1[Aurora Global DB (Serverless v2 + Multi-AZ) Primary]
+        C1 --> A1[Elastic Beanstalk - AZ1+AZ2]
+        A1 --> AS1[Auto Scaling Group]
+        A1 --> B1[Aurora Global DB Serverless v2 + Multi-AZ Primary]
         A1 --> L1[Load Balancer ALB + ACM]
     end
 
     subgraph Región B
-        C2 --> A2[Elastic Beanstalk (AZ1+AZ2)]
-        A2 --> B2[Aurora Global DB (Serverless v2 + Multi-AZ) Secondary]
+        C2 --> A2[Elastic Beanstalk - AZ1+AZ2]
+        A2 --> AS2[Auto Scaling Group]
+        A2 --> B2[Aurora Global DB Serverless v2 + Multi-AZ Secondary]
         A2 --> L2[Load Balancer ALB + ACM]
     end
 
