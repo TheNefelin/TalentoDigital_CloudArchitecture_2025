@@ -1,7 +1,5 @@
 # Modelos de Implementación de Infraestructura: Casos de Uso
 
----
-
 ## 🏦 Escenario 1 - Banco Nacional
 
 **Descripción:**  
