@@ -50,16 +50,28 @@ graph TD
 
 ```mermaid
 graph TD
-    A[Usuarios] --> B[Route 53 Failover]
-    B --> C[Región A: Elastic Beanstalk]
-    B --> D[Región B: Elastic Beanstalk]
-    C --> E[Aurora Global DB Primary]
-    D --> F[Aurora Global DB Secondary]
-    E --> G[S3 con CRR + KMS]
-    F --> G
-    G --> H[AWS Cognito + IAM/MFA]
-    G --> I[CloudFront]
-    E --> J[CloudWatch Alarms]
+    A[Usuarios] --> B[Route 53 Failover (con Health Checks)]
+    B --> C1[Región A]
+    B --> C2[Región B]
+
+    subgraph Región A
+        C1 --> A1[Elastic Beanstalk (AZ1+AZ2)]
+        A1 --> B1[Aurora Global DB (Serverless v2 + Multi-AZ) Primary]
+        A1 --> L1[Load Balancer ALB + ACM]
+    end
+
+    subgraph Región B
+        C2 --> A2[Elastic Beanstalk (AZ1+AZ2)]
+        A2 --> B2[Aurora Global DB (Serverless v2 + Multi-AZ) Secondary]
+        A2 --> L2[Load Balancer ALB + ACM]
+    end
+
+    B1 --> S3[Amazon S3 (CRR) + KMS]
+    B2 --> S3
+
+    S3 --> Cognito[AWS Cognito + IAM + MFA]
+    S3 --> CF[CloudFront Global]
+    B1 --> CW[CloudWatch Metrics + Alarms + Logs]
 ```
 
 <img src="..\Img\Tarea2.drawio.png">
@@ -69,18 +81,45 @@ graph TD
 ## 4. **Compartir la solución con el grupo**
 Explica cómo cada mejora propuesta contribuye a mejorar un atributo de calidad:
 
-- ✅ **Resiliencia**  
-  Al implementar **Aurora Global Database** y **RDS Multi-AZ**, se garantiza alta disponibilidad incluso ante fallas regionales. Gracias a `Route 53 Failover`, el tráfico puede redirigirse automáticamente a otra región o instancia saludable, minimizando el tiempo de inactividad.
+### 🔄 **Resiliencia**  
+> Garantiza la disponibilidad del servicio ante fallos, incluso a nivel regional o de zona de disponibilidad.
 
-- 📈 **Escalabilidad**  
-  El uso de **Elastic Beanstalk con Auto Scaling** permite que las instancias de aplicación aumenten o disminuyan según la demanda. Por su parte, **Aurora Serverless** ajusta automáticamente la capacidad de la base de datos, permitiendo un uso eficiente de los recursos en picos de tráfico como feriados o campañas.
+- **Aurora Global Database** permite tener una réplica secundaria en otra región. Si la región principal falla, el tráfico puede redirigirse a la secundaria.
+- **RDS Multi-AZ** proporciona replicación sincrónica automática entre zonas de disponibilidad (AZs) dentro de una misma región.
+- **Amazon S3** con **CRR** (Cross-Region Replication) garantiza la duplicación automática de objetos en otra región.
+- **Route 53 Failover** + **Health Checks** detecta fallos y redirige automáticamente el tráfico a la región disponible.
+- **Elastic Beanstalk** desplegado en múltiples AZs distribuye las instancias de aplicación para tolerancia a fallos locales.
 
-- 🔒 **Seguridad**  
-  Con **AWS Cognito**, se implementa autenticación multifactor (MFA) para usuarios finales, y con **IAM**, se refuerza el control de acceso interno. Además, el uso de **KMS** permite cifrar tanto datos en reposo (S3, Aurora) como en tránsito (mediante TLS/HTTPS con ACM), protegiendo la información sensible de los usuarios.
+### 📈 **Escalabilidad**  
+> Permite ajustar los recursos de cómputo y base de datos de acuerdo con la carga del sistema.
 
-- 💡 **Visibilidad y monitoreo**  
-  Gracias a **CloudWatch**, se pueden establecer alarmas, métricas personalizadas y monitoreo continuo, lo que permite detectar anomalías y responder proactivamente ante eventos inesperados.
+- **Elastic Beanstalk Auto Scaling** escalará las instancias EC2 de la aplicación automáticamente según el tráfico.
+- **Aurora Serverless v2** adapta automáticamente la capacidad de la base de datos según la demanda, ideal para cargas variables.
+- **CloudFront** actúa como una **CDN** global que entrega contenido en caché, reduciendo la presión sobre el backend.
+
+### 🔒 **Seguridad**  
+> Asegura que los datos estén protegidos y los accesos controlados.
+
+- **AWS IAM** gestiona políticas de acceso interno para servicios y usuarios.
+- **Amazon Cognito** permite autenticación con **MFA** (Multi-Factor Authentication) para usuarios externos.
+- **AWS KMS** (Key Management Service) permite cifrado de datos en reposo y en tránsito para **RDS**, **S3** y más.
+- **AWS ACM** habilita certificados TLS/HTTPS fácilmente para cifrado en tránsito.
+- **S3 Bucket** Policies y Bloqueo de acceso público aseguran los objetos privados.
+- **S3 Bucket** Policies y Bloqueo de acceso público aseguran los objetos privados.
+
+### 💡 **Visibilidad y monitoreo**  
+> Proporciona herramientas para detectar problemas y anticiparse a incidentes.
+
+- **Amazon CloudWatch Alarms** notifica cuando una métrica excede los umbrales definidos (latencia, CPU, errores 5xx, etc.).
+- **CloudWatch Logs** para registrar eventos del backend (Elastic Beanstalk) y errores de base de datos.
+- **CloudTrail** registra todas las llamadas API para auditoría de seguridad.
+
+### 💰 Optimización de costos
+> Garantiza que solo se consuman recursos necesarios según demanda.
+
+- **Aurora Serverless v2** cobra por capacidad usada por segundo.
+- **Auto Scaling** en **Elastic Beanstalk** evita mantener instancias ociosas.
+- **CloudFront** descarga recursos estáticos desde edge locations, reduciendo tráfico y uso de backend.
 
 ---
 
-Estas mejoras no solo corrigen las debilidades actuales, sino que preparan a la arquitectura para crecer de manera segura y estable frente a la demanda del negocio.
