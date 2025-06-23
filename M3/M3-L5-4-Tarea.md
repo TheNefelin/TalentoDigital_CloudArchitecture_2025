@@ -62,7 +62,8 @@ graph TD
     E --> J[CloudWatch Alarms]
 ```
 
-<img src="../img/Tarea2.drawio.png">
+<img src="\Img\Tarea2.drawio.png">
+<img src="..\Img\Tarea2.drawio.png">
 
 ---
 
