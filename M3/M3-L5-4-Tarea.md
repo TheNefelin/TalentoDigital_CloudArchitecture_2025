@@ -68,7 +68,7 @@ graph TD
         A2 --> L2[Load Balancer ALB + ACM]
     end
 
-    B1 --> S3[Amazon S3 (CRR) + KMS]
+    B1 --> S3[Amazon S3 CRR + KMS]
     B2 --> S3
 
     S3 --> Cognito[AWS Cognito + IAM + MFA]
