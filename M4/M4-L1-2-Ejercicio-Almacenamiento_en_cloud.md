@@ -49,13 +49,6 @@ Además, podrás explorar transiciones a clases como **Amazon Glacier** o **Inte
 
 ---
 
-## ⏳ Tiempo estimado
-
-- **Duración**: entre 1 y 2 horas  
-- Dependerá de tu experiencia previa con la consola de AWS y el uso de políticas de ciclo de vida.
-
----
-
 ## 🛠️ Recursos
 
 - [Documentación oficial de Amazon S3](https://docs.aws.amazon.com/s3/index.html)
@@ -63,3 +56,98 @@ Además, podrás explorar transiciones a clases como **Amazon Glacier** o **Inte
   - **Cyberduck**, **S3 Browser**, o la **CLI de AWS** (para exploración avanzada)
 
 ---
+
+# Desarrollo
+
+### 1. Buscar y agregar S3
+
+<img src="..\Img\M4\L1\Ejercicio\M4-L1-01.png">
+
+### 2. Crear Bucket
+
+<img src="..\Img\M4\L1\Ejercicio\M4-L1-02.png">
+
+### 3. Crear Bucket
+- **Definir tipo de Bucket**: Uso General
+- **Nombre del Bucket**: s3-bucket-ejercicio-m4-l1
+- **Region**: EE.UU. Este (Norte de Virginia) us-east-1
+- **Propiedad de objetos**: ACL Deshabilitadas (Propiedad de la cuenta actual)
+- **Configuración de bloqueo de acceso público para este bucket**: Bloquear todo el acceso público
+- **Control de versiones de buckets**: Desactivar
+- **Etiquetas - opcional**: Ninguno
+- **Cifrado predeterminado**: 
+  - Tipo de cifrado: Cifrado del servidor con claves administradas de Amazon S3 (SSE-S3)
+  - 
+- **Clave de bucket**: Habilitar
+- **Configuración avanzada**: Desactivar
+- **Crear Bucket**
+
+<img src="..\Img\M4\L1\Ejercicio\M4-L1-03.png">
+<img src="..\Img\M4\L1\Ejercicio\M4-L1-04.png">
+
+### 4. Agregar elementos al Bucket
+
+- **Click en el nombre del Bucket**
+- **Revision de opciones**
+  - Metadatos
+  - Propiedades
+  - Permisos
+  - Métricas
+  - Administración
+  - Puntos de acceso
+- **Cargar Archivos**
+- **Clase de almacenamiento**: Agrupación por niveles inteligente
+- **Cifrado del lado del servidor**: No especificar una clave de cifrado
+- **Sumas de comprobación**: La Recomendada
+- **Etiquetas - opcional**: Ninguno
+- **Ninguna**: Ninguno
+- **Cargar**
+- **Cerrar**
+
+<img src="..\Img\M4\L1\Ejercicio\M4-L1-05.png">
+<img src="..\Img\M4\L1\Ejercicio\M4-L1-06.png">
+<img src="..\Img\M4\L1\Ejercicio\M4-L1-07.png">
+<img src="..\Img\M4\L1\Ejercicio\M4-L1-08.png">
+<img src="..\Img\M4\L1\Ejercicio\M4-L1-09.png">
+<img src="..\Img\M4\L1\Ejercicio\M4-L1-10.png">
+
+### 5. Revisar elementos del Bucket
+
+- **Click en elemento jpg**
+- **Revisar URL**: o funciona por que el Bucket es privado
+- **Click Abrir**: Se vera la Imagen
+
+<img src="..\Img\M4\L1\Ejercicio\M4-L1-11.png">
+<img src="..\Img\M4\L1\Ejercicio\M4-L1-12.png">
+<img src="..\Img\M4\L1\Ejercicio\M4-L1-13.png">
+<img src="..\Img\M4\L1\Ejercicio\M4-L1-14.png">
+
+### 6. Modificaciones
+
+- **Crear Carpeta**
+- **Nombrar Carpeta**
+- **Crear Carpeta**
+- **Mover elementos a la carpeta**
+- **Trasladar**
+- **Cerrar**
+
+<img src="..\Img\M4\L1\Ejercicio\M4-L1-15.png">
+<img src="..\Img\M4\L1\Ejercicio\M4-L1-16.png">
+<img src="..\Img\M4\L1\Ejercicio\M4-L1-17.png">
+<img src="..\Img\M4\L1\Ejercicio\M4-L1-18.png">
+<img src="..\Img\M4\L1\Ejercicio\M4-L1-19.png">
+<img src="..\Img\M4\L1\Ejercicio\M4-L1-20.png">
+<img src="..\Img\M4\L1\Ejercicio\M4-L1-21.png">
+
+### 7. Eliminar el Bucket
+- **Vaciar el Bucket**
+- **Elimiar**
+- **Salir**
+- **Seleccionar el Bucket**
+- **Elimiar el Bucket**
+
+<img src="..\Img\M4\L1\Ejercicio\M4-L1-22.png">
+<img src="..\Img\M4\L1\Ejercicio\M4-L1-23.png">
+<img src="..\Img\M4\L1\Ejercicio\M4-L1-24.png">
+<img src="..\Img\M4\L1\Ejercicio\M4-L1-25.png">
+<img src="..\Img\M4\L1\Ejercicio\M4-L1-26.png">
