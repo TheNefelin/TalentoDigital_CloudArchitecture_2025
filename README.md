@@ -274,3 +274,4 @@ Esta tabla profundiza en los servicios principales de AWS, detallando sus compon
 |                              | **Capacidad de Lectura/Escritura** | Absoluto            | La capacidad de procesamiento de la tabla, medida en Unidades de Capacidad de Lectura (RCU) y Unidades de Capacidad de Escritura (WCU). Puedes configurar aprovisionada (pagas por lo que reservas) o bajo demanda (pagas por lo que usas).                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 
 ---
+
