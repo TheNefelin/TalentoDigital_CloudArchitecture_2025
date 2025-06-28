@@ -81,3 +81,5 @@ Amazon RDS es un servicio gestionado que soporta:
 | Seguridad        | Cifrado, IAM, red privada            | Depende de recursos y prácticas locales|
 | Disponibilidad   | SLA altos, Multi-AZ, backups         | Requiere redundancia propia            |
 | Control total    | Limitado
+
+---
