@@ -1,4 +1,4 @@
-# Tabla de Servicios AWS en Learner Lab (Chile)
+# Tabla de Servicios AWS en Learner Lab
 
 📅 **Actualizado:** 24/06/2025
 
