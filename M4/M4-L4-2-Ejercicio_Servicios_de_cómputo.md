@@ -131,9 +131,21 @@ Este desafío te permite practicar principios fundamentales de servicios de cóm
 
 Y comprobar el funcionamiento real de un entorno cloud.
 
+## Apoyo
+- [Uso de SSH para conectarse](https://labs.vocareum.com/web/4167329/4299576.0/ASNLIB/public/docs/lang/es-es/README.html?vockey=f89ce645f829c1a0904304c4a4d0d451e954df78d817cda84241cdb9aa964845#sshwindows)
+- [Comparar Costos](https://instances.vantage.sh/)
+- [AWS Pricing Calculator](https://calculator.aws)
 ---
 
 # Desarrollo
+
+```bash
+#!/bin/bash
+yum install -y httpd
+systemctl enable httpd
+systemctl start httpd
+echo '<html><h1>EC2 Corriendo!!!</h1></html>' > /var/www/html/index.html
+```
 
 ## Caso 1
 
@@ -141,10 +153,6 @@ Y comprobar el funcionamiento real de un entorno cloud.
 <img src="..\Img\M4\L4\Ejercicio\M4-L4-Ejercicio-02.png">
 <img src="..\Img\M4\L4\Ejercicio\M4-L4-Ejercicio-03.png">
 <img src="..\Img\M4\L4\Ejercicio\M4-L4-Ejercicio-04.png">
-
-- [Usuario de Windows: Uso de SSH para conectarse
-](https://labs.vocareum.com/web/4167329/4299576.0/ASNLIB/public/docs/lang/es-es/README.html?vockey=f89ce645f829c1a0904304c4a4d0d451e954df78d817cda84241cdb9aa964845#sshwindows)
-
 <img src="..\Img\M4\L4\Ejercicio\M4-L4-Ejercicio-05.png">
 <img src="..\Img\M4\L4\Ejercicio\M4-L4-Ejercicio-06.png">
 <img src="..\Img\M4\L4\Ejercicio\M4-L4-Ejercicio-07.png">
@@ -156,3 +164,16 @@ Y comprobar el funcionamiento real de un entorno cloud.
 <img src="..\Img\M4\L4\Ejercicio\M4-L4-Ejercicio-13.png">
 <img src="..\Img\M4\L4\Ejercicio\M4-L4-Ejercicio-14.png">
 <img src="..\Img\M4\L4\Ejercicio\M4-L4-Ejercicio-15.png">
+
+## Caso 2
+
+<img src="..\Img\M4\L4\Ejercicio\M4-L4-Ejercicio-16.png">
+<img src="..\Img\M4\L4\Ejercicio\M4-L4-Ejercicio-17.png">
+<img src="..\Img\M4\L4\Ejercicio\M4-L4-Ejercicio-18.png">
+<img src="..\Img\M4\L4\Ejercicio\M4-L4-Ejercicio-19.png">
+<img src="..\Img\M4\L4\Ejercicio\M4-L4-Ejercicio-20.png">
+<img src="..\Img\M4\L4\Ejercicio\M4-L4-Ejercicio-21.png">
+<img src="..\Img\M4\L4\Ejercicio\M4-L4-Ejercicio-22.png">
+<img src="..\Img\M4\L4\Ejercicio\M4-L4-Ejercicio-23.png">
+<img src="..\Img\M4\L4\Ejercicio\M4-L4-Ejercicio-24.png">
+<img src="..\Img\M4\L4\Ejercicio\M4-L4-Ejercicio-25.png">
