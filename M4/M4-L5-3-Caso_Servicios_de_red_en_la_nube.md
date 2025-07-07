@@ -132,3 +132,4 @@ mysql -h 10.0.2.100 -u admin -p
 <img src="..\Img\M4\L5\Caso\M4-L5-Caso-10.png">
 <img src="..\Img\M4\L5\Caso\M4-L5-Caso-11.png">
 <img src="..\Img\M4\L5\Caso\M4-L5-Caso-12.png">
+<img src="..\Img\M4\L5\Caso\M4-L5-Caso-13.png">
