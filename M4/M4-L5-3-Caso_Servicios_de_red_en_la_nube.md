@@ -74,7 +74,7 @@ flowchart LR
 ### 3. Lanzar Instancias
 | Rol            | Tipo      | Subnet     | Security Group |
 |----------------|-----------|------------|----------------|
-| Bastion Host   | t2.micro  | 10.0.1.0/24| SG-Public-Web  |
+| Bastion Host   | t2.micro  | 10.0.16.0/20| SG-Public-Web  |
 | Database Server| t2.micro  | 10.0.2.0/24| SG-Private-DB  |
 
 **Pruebas de conectividad**:
@@ -120,3 +120,15 @@ mysql -h 10.0.2.100 -u admin -p
 
 # Desarrollo
 
+<img src="..\Img\M4\L5\Caso\M4-L5-Caso-01.png">
+<img src="..\Img\M4\L5\Caso\M4-L5-Caso-02.png">
+<img src="..\Img\M4\L5\Caso\M4-L5-Caso-03.png">
+<img src="..\Img\M4\L5\Caso\M4-L5-Caso-04.png">
+<img src="..\Img\M4\L5\Caso\M4-L5-Caso-05.png">
+<img src="..\Img\M4\L5\Caso\M4-L5-Caso-06.png">
+<img src="..\Img\M4\L5\Caso\M4-L5-Caso-07.png">
+<img src="..\Img\M4\L5\Caso\M4-L5-Caso-08.png">
+<img src="..\Img\M4\L5\Caso\M4-L5-Caso-09.png">
+<img src="..\Img\M4\L5\Caso\M4-L5-Caso-10.png">
+<img src="..\Img\M4\L5\Caso\M4-L5-Caso-11.png">
+<img src="..\Img\M4\L5\Caso\M4-L5-Caso-12.png">
