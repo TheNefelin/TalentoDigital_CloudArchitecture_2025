@@ -52,11 +52,11 @@ Implementar una solución en la nube usando:
 
 ```mermaid
 graph TD
-    Route53[Amazon Route 53 (DNS)]
-    CloudFront[Amazon CloudFront (CDN)]
-    Lightsail[Amazon Lightsail (Web Hosting)]
-    Cert[AWS Certificate Manager (SSL/TLS)]
-    Firewall[Security Group (HTTP/HTTPS)]
+    Route53[Amazon Route 53 - DNS]
+    CloudFront[Amazon CloudFront - CDN]
+    Lightsail[Amazon Lightsail - Web Hosting]
+    Cert[AWS Certificate Manager - SSL/TLS]
+    Firewall[Security Group - HTTP/HTTPS]
 
     Route53 -->|CNAME / Alias| CloudFront
     CloudFront -->|Origin Request| Lightsail
