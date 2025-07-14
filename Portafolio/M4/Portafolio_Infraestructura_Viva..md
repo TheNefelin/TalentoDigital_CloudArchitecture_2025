@@ -46,15 +46,15 @@ Estas decisiones permiten mantener la **viabilidad técnica del proyecto**, ajus
 
 ```mermaid
 graph TD
-  Usuario([Usuario]) --> S3[Sitio Web (S3 Público)]
-  S3 --> EC2[App Backend (EC2 o Lambda)]
-  EC2 --> RDS[Base de datos relacional (RDS)]
-  EC2 --> DynamoDB[Base NoSQL (DynamoDB)]
-  RDS -->|Backups| Glacier[Almacenamiento Archivado (Glacier)]
+  Usuario --> S3[Sitio Web - S3 Público]
+  S3 --> EC2[App Backend - EC2 o Lambda]
+  EC2 --> RDS[Base de datos relacional - RDS]
+  EC2 --> DynamoDB[Base NoSQL - DynamoDB]
+  RDS -->|Backups| Glacier[Almacenamiento Archivado - Glacier]
   DynamoDB -->|Respaldo NoSQL| Glacier
   EC2 --> CloudWatch
   RDS --> CloudWatch
   DynamoDB --> CloudWatch
-  CloudWatch --> SNS[Notificación (SNS)]
-  SNS --> SQS[Cola de Mensajes (SQS)]
+  CloudWatch --> SNS[Notificación - SNS]
+  SNS --> SQS[Cola de Mensajes - SQS]
 ```
