@@ -1,133 +1,60 @@
-# 💼 Portafolio Educativo – Proyecto ABP: Infraestructura Viva
+# 🌐 Proyecto: Infraestructura Viva - Portafolio Cloud
 
-## 🎯 Objetivo General
-Evidenciar el progreso, logros y reflexiones personales durante el desarrollo del módulo 4: Fundamentos de Tecnología Cloud, integrando todos los contenidos y herramientas vistas, como AWS Academy, SQLiteOnline, Visual Studio Code, y buenas prácticas de arquitectura.
+## 🏢 Situación Inicial
 
----
+**Unidad solicitante:** Equipo de Innovación Tecnológica de la empresa _“Soluciones Digitales ACME”_
 
-## 🧱 Índice de Entregables
+El área de Innovación Tecnológica ha identificado la necesidad de modernizar la infraestructura para responder a crecientes requerimientos de procesamiento, almacenamiento y disponibilidad de datos.
 
-1. [Documento de Arquitectura](#1-📐-documento-de-arquitectura)
-2. [Prototipo o Demo](#2-prototipo-o-demo)
-3. [Plan de Monitoreo y Notificaciones](#3-plan-de-monitoreo-y-notificaciones)
-4. [Guía de Buenas Prácticas](#4-guía-de-buenas-prácticas)
-5. [Presentación Final / Informe Resumen](#5-presentación-final--informe-resumen)
-6. [Código y Documentación](#6-código-y-documentación)
-7. [Análisis de Caso](#7-análisis-de-caso)
-8. [Otras Evidencias](#8-otras-evidencias)
-9. [Reflexión Personal](#9-reflexión-personal)
+Actualmente, los departamentos de **ventas**, **soporte** y **finanzas** utilizan un entorno **on-premise**, que genera altos costos de mantenimiento y limita la rápida implementación de nuevas funcionalidades.
 
----
+### 🔍 Problemáticas a resolver
 
-## 1. 📐 Documento de Arquitectura
-
-- ✅ Descripción detallada de la solución "Infraestructura Viva".
-- ✅ Justificación técnica de cada servicio (EC2, RDS, DynamoDB, VPC, S3, SNS, etc.).
-- ✅ Diagrama representativo de la arquitectura usando Mermaid o imagen PNG.
-
-> 📎 *[Incluir aquí el archivo PDF o imagen del diagrama]*
+1. Disponer de un entorno de **cómputo escalable y seguro** para desplegar aplicaciones.
+2. Integrar de forma unificada **bases de datos relacionales y NoSQL** sin depender de hardware físico.
+3. Implementar un **sistema de almacenamiento confiable**, diferenciando datos de uso frecuente y de archivado.
+4. Configurar una **red virtual** que permita aislar servicios internos y exponer aplicaciones públicas de forma segura.
+5. Establecer un **plan de monitoreo y notificaciones** que detecte y corrija incidentes de forma proactiva.
+6. Diseñar una **solución que pueda implementarse** utilizando los contenidos y conceptos vistos en los manuales del curso.
 
 ---
 
-## 2. 🚀 Prototipo o Demo
+## 📘 Presentación del Caso
 
-- ✅ Instrucciones paso a paso para desplegar una instancia EC2 o Lambda conectada a RDS/DynamoDB.
-- ✅ Configuraciones de Visual Studio Code y pruebas realizadas en SQLiteOnline.
-- ✅ Capturas de ejecución o enlaces a demostraciones.
+Este proyecto tiene como objetivo migrar una infraestructura on-premise hacia la nube, implementando una solución denominada **“Infraestructura Viva”**, utilizando recursos gratuitos de AWS (AWS Free Tier y AWS Academy).
 
-> 📎 *[Incluir aquí enlace o capturas del prototipo]*
+Se busca poner en práctica los conceptos del módulo 4: _Fundamentos de Tecnología Cloud_, mediante el uso de servicios gestionados de cómputo, bases de datos, almacenamiento, redes, monitoreo y notificaciones, con énfasis en el diseño escalable, seguro y viable dentro de un entorno educativo.
 
 ---
 
-## 3. 📊 Plan de Monitoreo y Notificaciones
+## ⚙️ Alcance y Restricciones Técnicas
 
-- ✅ Configuración de métricas en Amazon CloudWatch (CPU, red, errores).
-- ✅ Alarmas con umbrales críticos y notificaciones por Amazon SNS.
-- ✅ Automatización de acciones ante fallos (ej. escalado, alerta, detención de servicios).
+Dado que el entorno de laboratorio en AWS Academy (Alchemy Lab) **no permite el acceso completo a todos los servicios**, se tomaron decisiones técnicas basadas en disponibilidad real. Las siguientes limitaciones fueron detectadas:
 
-> 📎 *[Incluir evidencias de las métricas, alarmas y notificaciones]*
+| Servicio | Restricción en Alchemy | Solución Alternativa |
+|----------|------------------------|------------------------|
+| CloudFront | No disponible | Se omite CDN; se trabaja solo con S3 público |
+| Lightsail | No disponible | Se utiliza EC2 t2.micro desde Free Tier |
+| ACM / dominios personalizados | No disponible | Uso de dominios internos o IP públicas |
+| CLI o SDK limitado | No disponible | Se utiliza únicamente la consola web (GUI) de AWS Academy |
 
----
-
-## 4. 🛡️ Guía de Buenas Prácticas
-
-- ✅ Seguridad: uso de HTTPS, certificados, IAM roles, reglas en grupos de seguridad.
-- ✅ Escalabilidad: uso de Auto Scaling o separación de capas.
-- ✅ Administración de red: VPC, subredes públicas/privadas, balanceador de carga.
-
-> 📎 *[Incluir archivo PDF o sección con las recomendaciones técnicas]*
+Estas decisiones permiten mantener la **viabilidad técnica del proyecto**, ajustándose al entorno educativo, sin perder los objetivos de aprendizaje.
 
 ---
 
-## 5. 🧾 Presentación Final / Informe Resumen
+## 🧱 Componentes de la Arquitectura
 
-- Opción A: Informe de 3–5 páginas con:
-  - ✔️ Resumen de arquitectura.
-  - ✔️ Servicios utilizados y justificación.
-  - ✔️ Lecciones aprendidas.
-
-- Opción B: Presentación de 10 minutos grabada o en PDF.
-
-> 📎 *[Incluir enlace o archivo de presentación]*
-
----
-
-## 6. 📂 Código y Documentación
-
-- ✅ Repositorio público en GitHub con:
-  - Código fuente.
-  - Archivos de configuración o scripts.
-  - README.md con instrucciones de despliegue.
-
-> 🔗 Repositorio: [github.com/usuario/proyecto-infraestructura-viva](#)
-
----
-
-## 7. 🔎 Análisis de Caso
-
-- ✅ Resolución del análisis de caso (manuales 7 y 8):
-  - Lightsail + CloudFront.
-  - Monitoreo con CloudWatch.
-  - Notificaciones con SNS.
-
-> 📎 *[Incluir documento con la resolución del análisis de caso]*
-
----
-
-## 8. 🧠 Otras Evidencias
-
-- ✔️ Resoluciones de desafíos de clase.
-- ✔️ Capturas de laboratorio AWS Academy.
-- ✔️ Actividades desarrolladas con SQLiteOnline.
-
-> 📎 *[Agregar aquí las evidencias complementarias]*
-
----
-
-## 9. ✍️ Reflexión Personal
-
-> "Durante el desarrollo del proyecto Infraestructura Viva, enfrenté desafíos como la configuración inicial de redes privadas y la integración de múltiples servicios AWS. Sin embargo, logré adquirir una visión más clara sobre cómo diseñar soluciones escalables, seguras y basadas en buenas prácticas cloud. Me siento más preparado para abordar proyectos reales con confianza y fundamento técnico."
-
-> 📌 *Puedes personalizar esta reflexión o incluir aprendizajes personales concretos.*
-
----
-
-## 📌 Notas Finales
-
-Este portafolio fue desarrollado cumpliendo los criterios de evaluación establecidos en la rúbrica del módulo 4, evidenciando el dominio de conceptos clave como:
-
-- Arquitectura cloud
-- Monitoreo y notificaciones
-- Seguridad y escalabilidad
-- Base de datos SQL y NoSQL
-- Almacenamiento y red
-- Automatización y buenas prácticas
-
----
-
-## 📎 Referencias
-- Manual #1 al #8 del módulo.
-- Documentación oficial de AWS.
-- SQLiteOnline.
-- AWS Academy y laboratorios prácticos.
-
+```mermaid
+graph TD
+  Usuario([Usuario]) --> S3[Sitio Web (S3 Público)]
+  S3 --> EC2[App Backend (EC2 o Lambda)]
+  EC2 --> RDS[Base de datos relacional (RDS)]
+  EC2 --> DynamoDB[Base NoSQL (DynamoDB)]
+  RDS -->|Backups| Glacier[Almacenamiento Archivado (Glacier)]
+  DynamoDB -->|Respaldo NoSQL| Glacier
+  EC2 --> CloudWatch
+  RDS --> CloudWatch
+  DynamoDB --> CloudWatch
+  CloudWatch --> SNS[Notificación (SNS)]
+  SNS --> SQS[Cola de Mensajes (SQS)]
+```
