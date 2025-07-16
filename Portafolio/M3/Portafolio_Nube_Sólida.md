@@ -158,7 +158,7 @@ Aplicar principios fundamentales de diseño para construir una arquitectura modu
 
 ```mermaid
 graph TD
-  A[Usuario] --> B[Frontend - S3 (hosting estático)]
+  A[Usuario] --> B[Frontend - S3 - hosting estático]
   B --> C[API Gateway]
   C --> D[Lambda Functions]
   D --> E[Base de Datos - RDS]
