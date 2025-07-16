@@ -8,8 +8,6 @@ La solución "Infraestructura Viva" propone la migración de un entorno on-premi
 
 ---
 
-## 🌐 Lección 1: Red - VPC y Subredes
-
 ### ✅ Objetivo:
 Diseñar una red segura y segmentada en la nube para soportar los servicios internos y públicos del sistema.
 
@@ -36,20 +34,6 @@ Diseñar una red segura y segmentada en la nube para soportar los servicios inte
 
 > ⚠️ **Nota:** Se omite la configuración de NAT Gateway para evitar el consumo del presupuesto del entorno de laboratorio, según las restricciones de AWS Academy.
 
----
-
-## ☁️ Lección 2: Almacenamiento - Amazon S3
-
-(Se agregará en la siguiente etapa)
-
----
-
-## 🧩 Lección 3: Base de datos NoSQL - DynamoDB
-
-(Se agregará después de la capa de almacenamiento)
-
----
-
 ## 🚀 Próximos pasos:
 1. Crear buckets en S3 (estándar y archivo)
 2. Configurar ciclo de vida y respaldos
@@ -65,6 +49,10 @@ Este portafolio se ajusta a las siguientes restricciones de AWS Academy Learner 
 - No se permite crear usuarios IAM
 - Recursos limitados por presupuesto
 - Regiones disponibles: `us-east-1` y `us-west-2`
+
+---
+
+<img src=".\img\P04.png">
 
 ---
 
