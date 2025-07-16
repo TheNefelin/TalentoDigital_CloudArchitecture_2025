@@ -95,7 +95,7 @@ Diseñar y desplegar una red virtual privada (VPC) completamente desde cero para
 ---
 
 <img src="\img\P04-VPC-01.png">
-<img src="\ìmg\P04-VPC-02.png">
+<img src="\img\P04-VPC-02.png">
 
 ---
 
@@ -134,12 +134,12 @@ Reglas de Entrada (Inbound):
 
 ---
 
-<img src="\ìmg\P04-GS-01.png">
-<img src="\ìmg\P04-GS-02.png">
-<img src="\ìmg\P04-GS-03.png">
-<img src="\ìmg\P04-GS-04.png">
-<img src="\ìmg\P04-GS-05.png">
-<img src="\ìmg\P04-GS-06.png">
+<img src="\img\P04-GS-01.png">
+<img src="\img\P04-GS-02.png">
+<img src="\img\P04-GS-03.png">
+<img src="\img\P04-GS-04.png">
+<img src="\img\P04-GS-05.png">
+<img src="\img\P04-GS-06.png">
 
 ---
 
@@ -152,13 +152,13 @@ Reglas de Entrada (Inbound):
 
 ---
 
-<img src="\ìmg\P04-S3-01.png">
-<img src="\ìmg\P04-S3-02.png">
-<img src="\ìmg\P04-S3-03.png">
-<img src="\ìmg\P04-S3-04.png">
-<img src="\ìmg\P04-S3-05.png">
-<img src="\ìmg\P04-S3-06.png">
-<img src="\ìmg\P04-S3-07.png">
+<img src="\img\P04-S3-01.png">
+<img src="\img\P04-S3-02.png">
+<img src="\img\P04-S3-03.png">
+<img src="\img\P04-S3-04.png">
+<img src="\img\P04-S3-05.png">
+<img src="\img\P04-S3-06.png">
+<img src="\img\P04-S3-07.png">
 
 ---
 
@@ -212,8 +212,8 @@ Reglas de Entrada (Inbound):
 ```
 
 <img src="\img\P04-NDB-01.png">
-<img src="\ìmg\P04-NDB-02.png">
-<img src="\ìmg\P04-NDB-03.png">
+<img src="\img\P04-NDB-02.png">
+<img src="\img\P04-NDB-03.png">
 
 ---
 
@@ -263,29 +263,29 @@ def lambda_handler(event, context):
         }
 ```
 
-<img src="\ìmg\P04-FUN-01.png">
-<img src="\ìmg\P04-FUN-02.png">
+<img src="\img\P04-FUN-01.png">
+<img src="\img\P04-FUN-02.png">
 
 ---
 
 ## 🌐 Crear API Gateway para Lambda
 
-<img src="\ìmg\P04-GW-01.png">
-<img src="\ìmg\P04-GW-02.png">
-<img src="\ìmg\P04-GW-03.png">
-<img src="\ìmg\P04-GW-04.png">
-<img src="\ìmg\P04-GW-05.png">
-<img src="\ìmg\P04-GW-06.png">
-<img src="\ìmg\P04-GW-07.png">
-<img src="\ìmg\P04-GW-08.png">
-<img src="\ìmg\P04-GW-09.png">
-<img src="\ìmg\P04-GW-10.png">
+<img src="\img\P04-GW-01.png">
+<img src="\img\P04-GW-02.png">
+<img src="\img\P04-GW-03.png">
+<img src="\img\P04-GW-04.png">
+<img src="\img\P04-GW-05.png">
+<img src="\img\P04-GW-06.png">
+<img src="\img\P04-GW-07.png">
+<img src="\img\P04-GW-08.png">
+<img src="\img\P04-GW-09.png">
+<img src="\img\P04-GW-10.png">
 
 ## Crear RDS, para Testear
 
-<img src="\ìmg\P04-RDS-01.png">
-<img src="\ìmg\P04-RDS-02.png">
-<img src="\ìmg\P04-RDS-03.png">
-<img src="\ìmg\P04-RDS-04.png">
-<img src="\ìmg\P04-RDS-05.png">
-<img src="\ìmg\P04-RDS-06.png">
+<img src="\img\P04-RDS-01.png">
+<img src="\img\P04-RDS-02.png">
+<img src="\img\P04-RDS-03.png">
+<img src="\img\P04-RDS-04.png">
+<img src="\img\P04-RDS-05.png">
+<img src="\img\P04-RDS-06.png">
