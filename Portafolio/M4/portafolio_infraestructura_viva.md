@@ -211,7 +211,7 @@ Reglas de Entrada (Inbound):
 ]
 ```
 
-<img src=".\Img\P04-NDB-01.png">
+<img src="..\Portafolio\M4\img\P04-NDB-01.png">
 <img src=".\Img\P04-NDB-02.png">
 <img src=".\Img\P04-NDB-03.png">
 
