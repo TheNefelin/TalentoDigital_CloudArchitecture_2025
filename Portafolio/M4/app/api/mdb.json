@@ -1,0 +1,44 @@
+[
+  {
+    "id": {
+      "S": "prod-001"
+    },
+    "nombre": {
+      "S": "Dinamita Triple X"
+    },
+    "descripcion": {
+      "S": "¡Explosión garantizada! Ideal para túneles falsos en cañones."
+    },
+    "img": {
+      "S": "dinamita.png"
+    }
+  },
+  {
+    "id": {
+      "S": "prod-002"
+    },
+    "nombre": {
+      "S": "Imán Industrial ACME"
+    },
+    "descripcion": {
+      "S": "Poder de atracción insuperable. No se hace responsable por atraer rocas, trenes o el propio Coyote."
+    },
+    "img": {
+      "S": "iman.png"
+    }
+  },
+  {
+    "id": {
+      "S": "prod-003"
+    },
+    "nombre": {
+      "S": "Yunque Volador"
+    },
+    "descripcion": {
+      "S": "Clásico ACME. No garantizamos precisión en la caída."
+    },
+    "img": {
+      "S": "yunque.png"
+    }
+  }
+]
