@@ -94,8 +94,8 @@ Diseñar y desplegar una red virtual privada (VPC) completamente desde cero para
 
 ---
 
-<img src=".\Img\P04-VPC-01.png">
-<img src=".\Img\P04-VPC-02.png">
+<img src="\img\P04-VPC-01.png">
+<img src="..\Portafolio\M4\ìmg\P04-VPC-02.png">
 
 ---
 
