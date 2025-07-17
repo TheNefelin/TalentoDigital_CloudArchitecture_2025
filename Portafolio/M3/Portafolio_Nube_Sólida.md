@@ -165,7 +165,7 @@ graph TD
   D --> F[Auth0 / Firebase Auth]
 ```
 
-> Puedes agregar aquí un diagrama visual o usar herramientas como draw.io o mermaid.
+<img src=".\img\P03.png">
 
 ---
 
@@ -507,3 +507,14 @@ exports.handler = async (event) => {
 
 ## ⚙️ API Gateway
 
+- **Tipo Api**: API HTTP
+- **Nombre**: tec-api
+
+<img src=".\img\P03-GW-01.png">
+<img src=".\img\P03-GW-02.png">
+<img src=".\img\P03-GW-03.png">
+<img src=".\img\P03-GW-04.png">
+<img src=".\img\P03-GW-05.png">
+<img src=".\img\P03-GW-06.png">
+<img src=".\img\P03-GW-07.png">
+<img src=".\img\P03-GW-08.png">
