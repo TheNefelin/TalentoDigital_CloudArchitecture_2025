@@ -249,4 +249,256 @@ A continuación, se describen los pasos para implementar la arquitectura concept
 --- 
 
 ## ⚙️ VPC
-- 
+
+| Opción                         | Configuración elegida       | Motivo técnico                                                                                      |
+|-------------------------------|-----------------------------|------------------------------------------------------------------------------------------------------|
+| **Nombre de la VPC**          | `tec-vpc`                   | Uso de nomenclatura estándar del proyecto (`tec_`) para mantener orden y trazabilidad.              |
+| **CIDR IPv4**                 | `10.0.0.0/16`               | Rango amplio que permite dividir en múltiples subredes públicas y privadas.                         |
+| **Tenencia**                  | Predeterminado              | No se requiere hardware dedicado; se optimiza costo y es suficiente para el entorno educativo.       |
+| **Zonas de disponibilidad**   | 2                           | Provee redundancia y alta disponibilidad en múltiples zonas.                                        |
+| **Subredes públicas**         | 2                           | Necesarias para exponer recursos como S3, API Gateway o posibles EC2 con acceso público.            |
+| **Subredes privadas**         | 2                           | Usadas para alojar servicios sensibles como RDS y funciones Lambda sin acceso directo a Internet.   |
+| **NAT Gateway**               | Ninguna                     | Se evita para reducir costos; los recursos privados acceden a S3 mediante endpoint sin usar NAT.     |
+| **Punto de enlace de S3**     | Gateway de S3               | Permite que Lambda en subred privada acceda a S3 sin requerir salida a Internet ni NAT.             |
+| **DNS – nombres de host**     | Habilitado                  | Las instancias (como RDS o EC2) obtienen nombres DNS internos útiles para comunicación.             |
+| **DNS – resolución**          | Habilitado                  | Permite que servicios internos (como Lambda) resuelvan nombres como `rds.amazonaws.com`.            |
+
+---
+
+<img src=".\img\P03-VPC-01.png">
+
+---
+
+## ⚙️ Security Group
+
+### 🔐 Security Group: `tec-sg-admin`
+
+- **Nombre**: tec-sg-admin
+- **Descripción**: Administracion desde el PC local a servicios como PostgreSQL o SSH.
+- **VPC**: tec-vpc
+
+| Dirección | Tipo        | Protocolo | Puerto | Origen/Destino          | Descripción                              |
+| --------- | ----------- | --------- | ------ | ----------------------- | ---------------------------------------- |
+| Entrada   | PostgreSQL  | TCP       | 5432   | `MI_IP/32` o `Anywhere` | Acceso a PostgreSQL desde EC2 (pgAdmin instalado) |
+| Entrada   | SSH         | TCP       | 22     | `MI_IP/32` o `Anywhere` | Acceso SSH a EC2 (si fuera necesario)    |
+| Salida    | All Traffic | All       | All    | `0.0.0.0/0`             | Permitir todas las salidas (por defecto) |
+
+---
+
+<img src=".\img\P03-SG-01.png">
+
+---
+
+### 🔐 Security Group: `tec-sg-backend`
+
+- **Nombre**: tec-sg-backend
+- **Descripción**: Permite acceso a la base de datos PostgreSQL desde Lambda y desde el admin para pruebas.
+- **VPC**: tec-vpc
+
+| Dirección | Tipo        | Protocolo | Puerto | Origen/Destino  | Descripción                                       |
+| --------- | ----------- | --------- | ------ | --------------- | ------------------------------------------------- |
+| Entrada   | PostgreSQL  | TCP       | 5432   | `tec-sg-lambda` | Permitir acceso desde Lambda                      |
+| Entrada   | PostgreSQL  | TCP       | 5432   | `tec-sg-admin`  | Permitir acceso desde instancia EC2 con SG admin  |
+| Entrada   | PostgreSQL  | TCP       | 5432   | `MI_IP/32`      | Permitir acceso temporal a PostgreSQL desde pgAdmin |
+| Salida    | All Traffic | All       | All    | `0.0.0.0/0`     | Permitir todas las salidas (por defecto)          |
+
+---
+
+<img src=".\img\P03-SG-02.png">
+
+---
+
+### 🔐 Security Group: `tec-sg-lambda`
+
+- **Nombre**: tec-sg-lambda
+- **Descripción**: Permite que Lambda se comunique con recursos backend como RDS.
+- **VPC**: tec-vpc
+
+| Dirección | Tipo        | Protocolo | Puerto | Origen/Destino   | Descripción                          |
+| --------- | ----------- | --------- | ------ | ---------------- | ------------------------------------ |
+| Salida    | PostgreSQL  | TCP       | 5432   | `tec-sg-backend` | Permitir que Lambda acceda a la base |
+| Salida    | All Traffic | All       | All    | `0.0.0.0/0`      | (Opcional) Permitir otras salidas    |
+
+---
+
+<img src=".\img\P03-SG-03.png">
+
+---
+
+### 🔐 Security Group: `Vincular Grupos`
+- tec-sg-backend -> tec-sg-lambda
+- tec-sg-lambda -> tec-sg-backend
+
+---
+
+<img src=".\img\P03-SG-04.png">
+<img src=".\img\P03-SG-05.png">
+
+---
+
+## 🛢️ RDS - PostgreSQL
+
+| Opción                             | Configuración                             | Motivo / Justificación                                     |
+|-----------------------------------|-------------------------------------------|-------------------------------------------------------------|
+| **Método de creación**            | Creación estándar                         | Permite control total sobre configuración                   |
+| **Motor**                         | PostgreSQL 17.4-R1                        | Última versión estable soportada                            |
+| **Plantilla**                     | Entorno de prueba                         | Entorno no productivo (desarrollo/test)                     |
+| **Identificador de instancia**   | tec-pgdb                                  | Nomenclatura estandarizada                                  |
+| **Usuario maestro**               | postgres                                  | Usuario por defecto y reconocido                             |
+| **Contraseña**                    | Generada manualmente (segura)             | Control y reutilización futura                               |
+| **Administración de credenciales**| Autoadministrado                          | Manejo manual sin Secrets Manager                            |
+| **Clase de instancia**            | db.t4g.micro                              | Bajo costo, ideal para pruebas                               |
+| **Almacenamiento**                | 20 GiB SSD (gp2)                          | Suficiente para pruebas, buena velocidad                     |
+| **Acceso público**                | ✅ Sí                                     | Necesario para conectar desde pgAdmin4                       |
+| **VPC**                          | tec-vpc                                   | VPC previamente creada                                      |
+| **Subred**                      | Grupo de subredes automático              | Distribución en 2 AZs por VPC Wizard                         |
+| **Grupo de Seguridad**           | tec-sg-backend                           | Seguridad centralizada, controla acceso Lambda y admin       |
+| **Reglas en tec-sg-backend**    | PostgreSQL (TCP 5432) desde `tec-sg-lambda` y `tec-sg-admin` | Permite acceso desde Lambda y acceso temporal desde admin |
+| **Tipo de red**                  | IPv4                                      | Suficiente para conexión desde red local                     |
+| **Zona de disponibilidad**       | Sin preferencia                           | AWS distribuye según disponibilidad                         |
+| **Proxy RDS**                    | No                                        | No necesario en entorno de pruebas                           |
+| **Autenticación**                | Contraseña                                | Simple y funcional para laboratorio                          |
+| **Certificado**                 | rds-ca-rsa2048-g1                         | Seguridad TLS activa                                         |
+| **Performance Insights**         | Opcional (7 días)                         | Puede activarse para monitoreo básico                        |
+| **Logs en CloudWatch**           | PostgreSQL, IAM errors, Update            | Trazabilidad y debugging básico                              |
+
+---
+
+```sql
+-- Crear la tabla
+CREATE TABLE personajes_hxh (
+    id SERIAL PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL,
+    tipo_nen VARCHAR(50) NOT NULL,
+    edad INT NOT NULL,
+    descripcion TEXT,
+    img VARCHAR(100)  -- nombre de archivo de imagen, ej: "gon.png"
+);
+```
+```sql
+-- Insertar registros
+INSERT INTO personajes_hxh (nombre, tipo_nen, edad, descripcion, img) VALUES
+('Gon Freecss', 'Enhancer', 12, 'Protagonista, con gran talento natural para el Nen.', 'gon.png'),
+('Killua Zoldyck', 'Transmuter', 12, 'Hijo de la familia asesina Zoldyck, amigo cercano de Gon.', 'killua.png'),
+('Kurapika', 'Conjurer', 17, 'Último sobreviviente del clan Kurta, busca venganza.', 'kurapika.png'),
+('Leorio Paradinight', 'Emitter', 19, 'Aspira a ser médico, es valiente y decidido.', 'leorio.png'),
+('Hisoka Morow', 'Transmuter', 28, 'Antagonista impredecible, disfruta de la pelea.', 'hisoka.png'),
+('Chrollo Lucilfer', 'Specialist', 30, 'Líder de la banda de ladrones Fantasma.', 'chrollo.png'),
+('Biscuit Krueger', 'Enhancer', 30, 'Maestra experimentada con apariencia joven.', 'biscuit.png');
+```
+```sql
+-- Consultar para verificar
+SELECT * FROM personajes_hxh;
+```
+
+
+<img src=".\img\P03-RDS-01.png">
+<img src=".\img\P03-RDS-02.png">
+<img src=".\img\P03-RDS-03.png">
+<img src=".\img\P03-RDS-04.png">
+<img src=".\img\P03-RDS-05.png">
+<img src=".\img\P03-RDS-06.png">
+<img src=".\img\P03-RDS-07.png">
+<img src=".\img\P03-RDS-08.png">
+
+---
+
+## ⚙️ Lambda API
+
+### Lambda
+- **Nombre**: tec-lambda-api
+- **Idioma**: Python 3.13
+- **Rol de ejecución**: LabRole
+- **VPC**: tec-vpc
+- **Subredes**:
+  - tec-subnet-privada-1
+  - tec-subnet-privada-2
+- **Grupos de seguridad**: tec-sg-lambda
+
+### Capa
+- **Nombre**: pg-layer
+- **Descripción**: Descripción: Dependencia pg (PostgreSQL) para funciones Lambda en Node.js 22.x
+- **Cargar un archivo .zip**: nodejs.zip
+- **Arquitecturas compatibles**: x86_64
+- **Versiones ejecutables compatibles**: Node.js 22.x
+
+```bash
+node --version
+```
+
+```bash
+npm init -y
+```
+
+```bash
+npm install pg
+```
+
+```
+nodejs/
+│
+├── node_modules/
+├── package-lock.json
+└── package.json/
+```
+
+### Entorno
+```
+DB_HOST=endpoint.rds.amazonaws.com
+DB_NAME=postgres
+DB_USER=postgres
+DB_PASS=contraseña
+DB_PORT=5432
+```
+
+```javascript
+const { Client } = require('pg');
+
+exports.handler = async (event) => {
+  const client = new Client({
+    host: process.env.DB_HOST,
+    port: parseInt(process.env.DB_PORT),
+    user: process.env.DB_USER,
+    password: process.env.DB_PASS,
+    database: process.env.DB_NAME,
+    ssl: {
+      rejectUnauthorized: false,
+    },
+  });
+
+  try {
+    await client.connect();
+
+    const result = await client.query('SELECT * FROM personajes_hxh');
+
+    await client.end();
+
+    return {
+      statusCode: 200,
+      body: JSON.stringify({
+        message: 'Lista de personajes obtenida correctamente',
+        data: result.rows,
+      }),
+    };
+  } catch (err) {
+    console.error('Error al obtener personajes:', err);
+    return {
+      statusCode: 500,
+      body: JSON.stringify({
+        error: 'No se pudieron obtener los personajes',
+        detail: err.message,
+      }),
+    };
+  }
+};
+```
+
+<img src=".\img\P03-FUN-01.png">
+<img src=".\img\P03-FUN-02.png">
+<img src=".\img\P03-FUN-03.png">
+<img src=".\img\P03-FUN-04.png">
+<img src=".\img\P03-FUN-05.png">
+<img src=".\img\P03-FUN-06.png">
+<img src=".\img\P03-FUN-07.png">
+
+---
