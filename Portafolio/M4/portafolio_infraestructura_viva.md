@@ -52,7 +52,7 @@ Este portafolio se ajusta a las siguientes restricciones de AWS Academy Learner 
 
 ---
 
-<img src=".\img\P04.png">
+<img src=".\img\P4.png">
 
 ---
 
