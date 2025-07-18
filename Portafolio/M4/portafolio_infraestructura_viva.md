@@ -65,25 +65,26 @@ Diseñar y desplegar una red virtual privada (VPC) completamente desde cero para
 
 ---
 
-## 🗺️ VPC: acme-vpc
+## 🧩 Configuración VPC
 
-| Recurso        | Nombre                         | Configuración                                   |
-|----------------|--------------------------------|--------------------------------------------------|
-| VPC            | `acme-vpc`                     | CIDR: `10.0.0.0/16`                              |
-| Subred Pública | `acme-vpc-subnet-public1`      | AZ: `us-east-1a` CIDR: `10.0.1.0/24`             |
-| Subred Pública | `acme-vpc-subnet-public2`      | AZ: `us-east-1b` CIDR: `10.0.2.0/24`             |
-| Subred Privada | `acme-vpc-subnet-private1`     | AZ: `us-east-1a` CIDR: `10.0.3.0/24`             |
-| Subred Privada | `acme-vpc-subnet-private2`     | AZ: `us-east-1b` CIDR: `10.0.4.0/24`             |
-| Internet GW    | `acme-vpc-igw`                 | Asociada a `acme-vpc`                           |
-| NAT Gateway    | `acme-vpc-natgw`               | En `subnet-public1` con IP elástica asignada    |
-| Route Table    | `acme-vpc-rtb-public`          | Rutas a IGW, asociada a subredes públicas       |
-| Route Table    | `acme-vpc-rtb-private1`        | Rutas a NAT Gateway, asociada a subnet-private1 |
-| Route Table    | `acme-vpc-rtb-private2`        | Rutas a NAT Gateway, asociada a subnet-private2 |
+| Parámetro                        | Valor                        | Descripción / Propósito                                                                 |
+| -------------------------------- | ---------------------------- | --------------------------------------------------------------------------------------- |
+| **Nombre de la VPC**             | `acme`                   | Nombre asignado a tu red privada virtual.                                               |
+| **CIDR IPv4**                    | `10.0.0.0/20`                | Rango de direcciones IP privadas disponibles para toda la VPC (incluye subredes).       |
+| **CIDR IPv6**                    | *Sin bloque*                 | No se está utilizando IPv6 en esta configuración.                                       |
+| **Tenencia**                     | Predeterminado               | Indica que las instancias EC2 no serán dedicadas (comparten hardware).                  |
+| **Zonas de disponibilidad (AZ)** | `us-east-1a`, `us-east-1b`   | Alta disponibilidad: recursos distribuidos entre 2 zonas de AWS.                        |
+| **Subredes públicas (2)**        | `10.0.1.0/24`, `10.0.2.0/24` | Subredes accesibles desde Internet (ideal para Load Balancers, NAT Gateway, etc.).      |
+| **Subredes privadas (2)**        | `10.0.3.0/24`, `10.0.4.0/24` | Subredes sin acceso directo desde Internet (ideal para RDS, instancias backend, etc.).  |
+| **Gateway NAT**                  | En `1 AZ`                    | Permite que subredes privadas accedan a Internet de forma segura (sin recibir tráfico). |
+| **VPC Endpoint (S3)**            | Gateway a S3                 | Permite acceso privado al servicio S3 desde subredes privadas, sin salir a Internet.    |
+| **DNS - Resolución**             | Habilitada                   | Permite a recursos resolver nombres DNS (por ejemplo, `amazonaws.com`).                 |
+| **DNS - Nombres de host**        | Habilitada                   | Asigna nombres DNS internos a instancias (ej: `ip-10-0-1-10.ec2.internal`).             |
 
 ---
 
-<img src="\img\P04-VPC-01.png">
-<img src="\img\P04-VPC-02.png">
+<img src=".\img\P04-VPC-01.png">
+<img src=".\img\P04-VPC-02.png">
 
 ---
 
@@ -122,12 +123,12 @@ Reglas de Entrada (Inbound):
 
 ---
 
-<img src="\img\P04-GS-01.png">
-<img src="\img\P04-GS-02.png">
-<img src="\img\P04-GS-03.png">
-<img src="\img\P04-GS-04.png">
-<img src="\img\P04-GS-05.png">
-<img src="\img\P04-GS-06.png">
+<img src=".\img\P04-GS-01.png">
+<img src=".\img\P04-GS-02.png">
+<img src=".\img\P04-GS-03.png">
+<img src=".\img\P04-GS-04.png">
+<img src=".\img\P04-GS-05.png">
+<img src=".\img\P04-GS-06.png">
 
 ---
 
@@ -140,13 +141,13 @@ Reglas de Entrada (Inbound):
 
 ---
 
-<img src="\img\P04-S3-01.png">
-<img src="\img\P04-S3-02.png">
-<img src="\img\P04-S3-03.png">
-<img src="\img\P04-S3-04.png">
-<img src="\img\P04-S3-05.png">
-<img src="\img\P04-S3-06.png">
-<img src="\img\P04-S3-07.png">
+<img src=".\img\P04-S3-01.png">
+<img src=".\img\P04-S3-02.png">
+<img src=".\img\P04-S3-03.png">
+<img src=".\img\P04-S3-04.png">
+<img src=".\img\P04-S3-05.png">
+<img src=".\img\P04-S3-06.png">
+<img src=".\img\P04-S3-07.png">
 
 ---
 
@@ -199,9 +200,9 @@ Reglas de Entrada (Inbound):
 ]
 ```
 
-<img src="\img\P04-NDB-01.png">
-<img src="\img\P04-NDB-02.png">
-<img src="\img\P04-NDB-03.png">
+<img src=".\img\P04-NDB-01.png">
+<img src=".\img\P04-NDB-02.png">
+<img src=".\img\P04-NDB-03.png">
 
 ---
 
@@ -251,29 +252,29 @@ def lambda_handler(event, context):
         }
 ```
 
-<img src="\img\P04-FUN-01.png">
-<img src="\img\P04-FUN-02.png">
+<img src=".\img\P04-FUN-01.png">
+<img src=".\img\P04-FUN-02.png">
 
 ---
 
 ## 🌐 Crear API Gateway para Lambda
 
-<img src="\img\P04-GW-01.png">
-<img src="\img\P04-GW-02.png">
-<img src="\img\P04-GW-03.png">
-<img src="\img\P04-GW-04.png">
-<img src="\img\P04-GW-05.png">
-<img src="\img\P04-GW-06.png">
-<img src="\img\P04-GW-07.png">
-<img src="\img\P04-GW-08.png">
-<img src="\img\P04-GW-09.png">
-<img src="\img\P04-GW-10.png">
+<img src=".\img\P04-GW-01.png">
+<img src=".\img\P04-GW-02.png">
+<img src=".\img\P04-GW-03.png">
+<img src=".\img\P04-GW-04.png">
+<img src=".\img\P04-GW-05.png">
+<img src=".\img\P04-GW-06.png">
+<img src=".\img\P04-GW-07.png">
+<img src=".\img\P04-GW-08.png">
+<img src=".\img\P04-GW-09.png">
+<img src=".\img\P04-GW-10.png">
 
 ## Crear RDS, para Testear
 
-<img src="\img\P04-RDS-01.png">
-<img src="\img\P04-RDS-02.png">
-<img src="\img\P04-RDS-03.png">
-<img src="\img\P04-RDS-04.png">
-<img src="\img\P04-RDS-05.png">
-<img src="\img\P04-RDS-06.png">
+<img src=".\img\P04-RDS-01.png">
+<img src=".\img\P04-RDS-02.png">
+<img src=".\img\P04-RDS-03.png">
+<img src=".\img\P04-RDS-04.png">
+<img src=".\img\P04-RDS-05.png">
+<img src=".\img\P04-RDS-06.png">
