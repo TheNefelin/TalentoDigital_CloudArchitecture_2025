@@ -98,3 +98,20 @@
 | └────────────┘ └─────────┘   │
 |  (Vídeos, Podcasts)          │
 └──────────────────────────────┘
+```
+
+```mermaid
+graph TD
+    U[Usuarios Globales] -->|Acceso a Contenido| C[CloudFront CDN\n(Edge Locations: NY, LON, TKY, SYD, SÃO)]
+    C -->|Cacheo de Archivos| S3
+    subgraph S3[Amazon S3]
+        P[Bucket Publico\n(Vídeos, Podcasts)]
+        R[Bucket Privado\n(Cursos Premium)]
+    end
+    R -->|URLs Firmadas| U
+
+    style U fill:#6af,stroke:#333,color:#fff
+    style C fill:#f96,stroke:#333
+    style P fill:#9f9,stroke:#333
+    style R fill:#f99,stroke:#333
+```
