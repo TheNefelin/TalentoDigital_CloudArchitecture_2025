@@ -104,14 +104,16 @@ Diseñar y desplegar una red virtual privada (VPC) completamente desde cero para
 
 ## 🧾 Crear y Configuración de grupo de subredes de base de datos
 
-| **Atributo**                | **Valor**                                            | **Motivo / Justificación**                                                                     |
-| --------------------------- | ---------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| **Nombre**                  | `acme-rsd-gsr`                                       | Nombre identificador del grupo de subredes para RDS. Sigue convención de nombres del proyecto. |
-| **Descripción**             | `Grupo de subredes privadas para RDS` | Descripción clara que indica el propósito: uso con subredes privadas.                          |
-| **VPC**                     | `acme-vpc`                   | VPC personalizada donde se encuentran las subredes y recursos del proyecto.                    |
-| **Zonas de disponibilidad** | `us-east-1a`, `us-east-1b`                           | Uso de 2 AZs distribuye los recursos para alta disponibilidad sin necesidad de 3 subredes.     |
-| **Subred 1**                | `acme-subnet-private1-us-east-1a` (`10.0.3.0/24`)    | Subred privada en AZ `us-east-1a`, evita acceso directo a internet, ideal para RDS.            |
-| **Subred 2**                | `acme-subnet-private2-us-east-1b` (`10.0.4.0/24`)    | Subred privada en AZ `us-east-1b`, complementa la distribución multi-AZ mínima.                |
+| **Atributo**                | **Valor**                                         | **Motivo / Justificación**                                                                     |
+| --------------------------- | ------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| **Nombre**                  | `acme-rsd-gsr`                                    | Nombre identificador del grupo de subredes para RDS. Sigue convención de nombres del proyecto. |
+| **Descripción**             | `Grupo de subredes privadas para RDS`             | Describe el uso general del grupo, enfocado en subredes privadas.                              |
+| **VPC**                     | `acme-vpc`               | VPC personalizada del proyecto donde están definidas las subredes necesarias.                  |
+| **Zonas de disponibilidad** | `us-east-1a`, `us-east-1b`                        | Cobertura multi-AZ para garantizar alta disponibilidad.                                        |
+| **Subred 1**                | `acme-subnet-private1-us-east-1a` (`10.0.3.0/24`) | Subred privada en `us-east-1a`, ideal para aislar servicios backend como RDS.                  |
+| **Subred 2**                | `acme-subnet-private2-us-east-1b` (`10.0.4.0/24`) | Subred privada en `us-east-1b`, garantiza redundancia multi-AZ.                                |
+| **Subred 3**                | `acme-subnet-public1-us-east-1a` (`10.0.1.0/24`)  | Subred pública en `us-east-1a`, permite acceso desde internet si el RDS lo permite.            |
+| **Subred 4**                | `acme-subnet-public1-us-east-1b` (`10.0.1.0/24`)  | Subred pública en `us-east-1b`, garantiza redundancia multi-AZ.            |
 
 ---
 
@@ -149,16 +151,36 @@ Diseñar y desplegar una red virtual privada (VPC) completamente desde cero para
 <img src=".\img\P04-RDS-03.png">
 <img src=".\img\P04-RDS-04.png">
 <img src=".\img\P04-RDS-05.png">
+<img src=".\img\P04-RDS-06.png">
 
 ---
 
 ```sql
+CREATE TABLE productos (
+    id VARCHAR(50) PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL,
+    descripcion TEXT,
+    img VARCHAR(100),
+    precio NUMERIC(10,2) NOT NULL,
+    stock INT NOT NULL,
+    categoria VARCHAR(50),
+    destacado BOOLEAN NOT NULL
+);
 ```
 
 ```sql
+INSERT INTO productos 
+  (id, nombre, descripcion, img, precio, stock, categoria, destacado)
+VALUES
+  ('prod-001', 'Dinamita Triple X', '¡Explosión garantizada! Ideal para túneles falsos en cañones.', 'dinamita.png', 49.99, 120, 'Explosivos', TRUE),
+  ('prod-002', 'Imán Industrial ACME', 'Poder de atracción insuperable. No se hace responsable por atraer rocas, trenes o el propio Coyote.', 'iman.png', 89.50, 60, 'Herramientas', FALSE),
+  ('prod-003', 'Yunque Volador', 'Clásico ACME. No garantizamos precisión en la caída.', 'yunque.png', 199.90, 15, 'Pesados', TRUE);
 ```
 
 ```sql
+SELECT * FROM productos;
+
+DROP TABLE IF EXISTS productos;
 ```
 
 
