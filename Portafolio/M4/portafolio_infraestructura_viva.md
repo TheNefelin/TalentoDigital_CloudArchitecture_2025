@@ -52,7 +52,7 @@ Este portafolio se ajusta a las siguientes restricciones de AWS Academy Learner 
 
 ---
 
-<img src=".\img\P4.png">
+<img src=".\img\P04.png">
 
 ---
 
@@ -65,7 +65,7 @@ Diseñar y desplegar una red virtual privada (VPC) completamente desde cero para
 
 ---
 
-## 🧩 Configuración VPC
+## 🧩 Crear y Configuración VPC (Virtual Private Cloud)
 
 | Parámetro                        | Valor                        | Descripción / Propósito                                                                 |
 | -------------------------------- | ---------------------------- | --------------------------------------------------------------------------------------- |
@@ -88,7 +88,96 @@ Diseñar y desplegar una red virtual privada (VPC) completamente desde cero para
 
 ---
 
-### 🔐 Grupo de Seguridad
+## ⚙️ Crear y Configuración de Grupo de Seguridad 
+### 🔐 acme-sg-rds
+
+- **Nombre**: acme-sg-rds
+- **Descripción**: Permite acceso a la base de datos PostgreSQL desde Lambda y desde el admin para pruebas.
+- **VPC**: acme-vpc
+
+| Regla | Tipo        | Protocolo | Puerto | Origen/Destino  | Descripción                                       |
+| --------- | ----------- | --------- | ------ | --------------- | ------------------------------------------------- |
+| Entrada   | PostgreSQL  | TCP       | 5432   | `MI_IP/32`      | Permitir acceso temporal a PostgreSQL desde pgAdmin |
+| Salida    | All Traffic | All       | All    | `0.0.0.0/0`     | Permitir todas las salidas (por defecto)          |
+
+---
+
+## 🧾 Crear y Configuración de grupo de subredes de base de datos
+
+| **Atributo**                | **Valor**                                            | **Motivo / Justificación**                                                                     |
+| --------------------------- | ---------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| **Nombre**                  | `acme-rsd-gsr`                                       | Nombre identificador del grupo de subredes para RDS. Sigue convención de nombres del proyecto. |
+| **Descripción**             | `Grupo de subredes privadas para RDS` | Descripción clara que indica el propósito: uso con subredes privadas.                          |
+| **VPC**                     | `acme-vpc`                   | VPC personalizada donde se encuentran las subredes y recursos del proyecto.                    |
+| **Zonas de disponibilidad** | `us-east-1a`, `us-east-1b`                           | Uso de 2 AZs distribuye los recursos para alta disponibilidad sin necesidad de 3 subredes.     |
+| **Subred 1**                | `acme-subnet-private1-us-east-1a` (`10.0.3.0/24`)    | Subred privada en AZ `us-east-1a`, evita acceso directo a internet, ideal para RDS.            |
+| **Subred 2**                | `acme-subnet-private2-us-east-1b` (`10.0.4.0/24`)    | Subred privada en AZ `us-east-1b`, complementa la distribución multi-AZ mínima.                |
+
+---
+
+<img src=".\img\P04-RDS-SG-01.png">
+
+---
+
+## 🔧 Crear y Configuración RDS (Relational Database Service)
+
+| **Atributo**                       | **Valor**               | **Motivo / Justificación**                                                                                     |
+| ---------------------------------- | ----------------------- | -------------------------------------------------------------------------------------------------------------- |
+| **Método de creación**             | Creación estándar       | Permite control total sobre la configuración personalizada.                                                    |
+| **Motor de base de datos**         | PostgreSQL              | Motor de código abierto, robusto y ampliamente utilizado.                                                      |
+| **Versión del motor**              | PostgreSQL 17.4-R1      | Última versión estable disponible, incluye mejoras de rendimiento y seguridad.                                 |
+| **Plantilla**                      | Producción              | Configura por defecto alta disponibilidad y mejores prácticas.                                                 |
+| **Alta disponibilidad**            | Multi-AZ (2 instancias) | Proporciona redundancia entre zonas de disponibilidad; tiempo de actividad del 99.95%.                         |
+| **ID de instancia**                | `acme-pgdb`             | Nombre identificador único y descriptivo para la instancia.                                                    |
+| **Usuario maestro**                | `postgres`              | Usuario administrador por defecto para PostgreSQL.                                                             |
+| **Administración de credenciales** | Autoadministrado        | Permite definir manualmente la contraseña, útil para configuraciones rápidas o personalizadas.                 |
+| **Contraseña maestra**             | \*\*\*\*\* (oculta)     | Clave de acceso al usuario administrador.                                                                      |
+| **Clase de instancia**             | `db.t3.micro`           | Instancia de bajo costo ideal para desarrollo o cargas ligeras.                                                |
+| **Tipo de almacenamiento**         | SSD gp3                 | Almacenamiento rápido y flexible, recomendado para la mayoría de casos.                                        |
+| **Almacenamiento asignado**        | 20 GiB                  | Tamaño mínimo recomendado, escalable más adelante.                                                             |
+| **Recurso de cómputo EC2**         | No aplica               | No se está conectando directamente a una instancia EC2.                                                        |
+| **Tipo de red**                    | IPv4                    | Configuración básica de red en VPC.                                                                            |
+| **VPC asociada**                   | `acme-vpc`              | VPC personalizada que contiene tus subredes y recursos relacionados.                                           |
+| **Grupo de subredes**              | `acme-rds-gsn`          | Define las subredes privadas donde se alojará la instancia RDS.                                                |
+| **Acceso público**                 | Sí                      | Permite conexión externa (por ejemplo, desde pgAdmin). Necesita configuración adicional en grupo de seguridad. |
+| **Grupo de seguridad**             | `acme-sg-rds`           | Controla qué IPs/puertos pueden acceder a la RDS. Debe permitir entrada por el puerto 5432 (PostgreSQL).       |
+
+---
+
+<img src=".\img\P04-RDS-01.png">
+<img src=".\img\P04-RDS-02.png">
+<img src=".\img\P04-RDS-03.png">
+<img src=".\img\P04-RDS-04.png">
+<img src=".\img\P04-RDS-05.png">
+
+---
+
+```sql
+```
+
+```sql
+```
+
+```sql
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+---
+---
+
+
 > Para acme-sg-public (Grupo de Seguridad Público)
 - Reglas de Entrada (Inbound):
 
