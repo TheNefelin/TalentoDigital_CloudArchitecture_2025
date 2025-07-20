@@ -102,11 +102,11 @@
 
 ```mermaid
 graph TD
-    U[Usuarios Globales] -->|Acceso a Contenido| C[CloudFront CDN\n(Edge Locations: NY, LON, TKY, SYD, SÃO)]
+    U[Usuarios Globales] -->|Acceso a Contenido| C[CloudFront CDN\n - Edge Locations: NY, LON, TKY, SYD, SÃO]
     C -->|Cacheo de Archivos| S3
     subgraph S3[Amazon S3]
-        P[Bucket Publico\n(Vídeos, Podcasts)]
-        R[Bucket Privado\n(Cursos Premium)]
+        P[Bucket Publico\n - Vídeos, Podcasts]
+        R[Bucket Privado\n - Cursos Premium]
     end
     R -->|URLs Firmadas| U
 
