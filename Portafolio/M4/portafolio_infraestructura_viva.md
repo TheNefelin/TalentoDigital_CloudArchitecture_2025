@@ -152,6 +152,7 @@ Diseñar y desplegar una red virtual privada (VPC) completamente desde cero para
 <img src=".\img\P04-RDS-04.png">
 <img src=".\img\P04-RDS-05.png">
 <img src=".\img\P04-RDS-06.png">
+<img src=".\img\P04-RDS-07.png">
 
 ---
 
