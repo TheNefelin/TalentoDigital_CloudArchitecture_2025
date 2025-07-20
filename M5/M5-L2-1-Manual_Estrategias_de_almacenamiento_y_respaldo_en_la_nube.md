@@ -88,14 +88,14 @@
 ```mermaid
 graph TD
     subgraph On-Premise
-        A[Servidores Locales<br>(Datos Críticos)] -->|VPN/Direct Connect| B
+        A[Servidores Locales<br> - Datos Críticos] -->|VPN/Direct Connect| B
         A -->|Respaldos Diarios| C
     end
 
     subgraph Cloud[AWS/Azure/GCP]
-        B[Buckets S3/Blob Storage<br>(Cold Storage)]
-        C[Herramientas de Análisis<br>(Athena, BigQuery)]
-        D[CDN<br>(CloudFront/Azure CDN)]
+        B[Buckets S3/Blob Storage<br> - Cold Storage]
+        C[Herramientas de Análisis<br> - Athena, BigQuery]
+        D[CDN<br> - CloudFront/Azure CDN]
     end
 
     A -->|Datos Históricos| B

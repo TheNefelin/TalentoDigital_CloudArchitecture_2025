@@ -77,29 +77,6 @@
 
 ## **6. Diagrama de Arquitectura**  
 
-```plaintext
-┌──────────────────────────────────────────────────────┐
-|                   Usuarios Globales                  |
-└───────────────┬────────────────▲─────────────────────┘
-                │                │
-                ▼                │
-┌────────────────────────────┐  │
-|       CloudFront (CDN)     |  │
-|  (Edge Locations: NY, LON, |  │
-|   TKY, SYD, SÃO, etc.)     |  │
-└───────────────┬────────────┘  │
-                │               │
-                ▼               │
-┌────────────────────────────┐ │
-|        Amazon S3           | │
-| ┌────────────┐ ┌─────────┐ | │
-| │  Bucket    │ │ Bucket  │ | │
-| │  Public    │ │ Private │◀┘ │
-| └────────────┘ └─────────┘   │
-|  (Vídeos, Podcasts)          │
-└──────────────────────────────┘
-```
-
 ```mermaid
 graph TD
     U[Usuarios Globales] -->|Acceso a Contenido| C[CloudFront CDN\n - Edge Locations: NY, LON, TKY, SYD, SÃO]
@@ -115,3 +92,25 @@ graph TD
     style P fill:#9f9,stroke:#333
     style R fill:#f99,stroke:#333
 ```
+
+### **Explicación del Diagrama Mermaid**:
+1. **Nodos**:
+   - `Usuarios Globales`: Punto de entrada (color azul).
+   - `CloudFront CDN`: Edge locations (color naranja).
+   - `Bucket Publico/Privado`: Estructura S3 (verde/rojo).
+
+2. **Flujos**:
+   - Línea sólida (`-->`): Conexiones directas.
+   - Texto en pipes (`|Acceso a Contenido|`): Describe la relación.
+
+3. **Personalización**:
+   - **Colores**: Modifica los valores `fill` (ej: `#6af` = azul claro).
+   - **Texto**: Añade más detalles en los labels.
+   - **Formas**: Por defecto es grafo orientado (rectángulos), pero puedes usar `graph LR` para horizontal.
+
+### **Ventajas**:
+- **Dinámico**: Se actualiza automáticamente al modificar el código.
+- **Portable**: Compatible con GitHub, GitLab, VS Code, etc.
+- **Interactivo**: En herramientas como Mermaid Live Editor.
+
+> **Nota**: Para ver el resultado, pega el código en [Mermaid Live Editor](https://mermaid.live/).
