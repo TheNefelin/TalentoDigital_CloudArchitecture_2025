@@ -140,7 +140,7 @@ graph TD
 
 ---
 
-<img src="..\img\M5\L1\M5-L1-Caso-01.png">
+<img src="..\Img\M5\L1\M5-L1-Caso-01.png">
 <img src="..\img\M5\L1\M5-L1-Caso-02.png">
 <img src="..\img\M5\L1\M5-L1-Caso-03.png">
 
