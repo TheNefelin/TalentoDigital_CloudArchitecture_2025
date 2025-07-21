@@ -322,42 +322,6 @@ def decimal_handler(obj):
 <img src=".\img\P04-GW-06.png">
 <img src=".\img\P04-GW-07.png">
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
----
----
----
----
----
----
----
----
----
----
----
-
 ## 📦 Almacenamiento (Amazon S3)
 
 | Bucket Name       | Región      | Uso principal                | Acceso            | Ciclo de Vida         |
