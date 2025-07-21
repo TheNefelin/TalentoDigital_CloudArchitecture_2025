@@ -69,4 +69,4 @@ graph TD
 - **Cumplimiento**: Adherencia a regulaciones financieras.
 - **Optimización de Costos**: Balance entre almacenamiento local (performance) y cloud (backup económico).
 
-> **Nota**: Se recomienda una prueba piloto con AWS Storage Gateway y Azure Blob Storage antes de implementar a gran escala.
+---
