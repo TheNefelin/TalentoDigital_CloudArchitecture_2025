@@ -113,4 +113,112 @@ graph TD
 - **Portable**: Compatible con GitHub, GitLab, VS Code, etc.
 - **Interactivo**: En herramientas como Mermaid Live Editor.
 
-> **Nota**: Para ver el resultado, pega el código en [Mermaid Live Editor](https://mermaid.live/).
+---
+
+> [!WARNING]
+> Por las limitaciones de AWSAlchemy Lab, se desarrollará un ejemplo con Lambda.
+
+## 🧩 Paso a Paso
+
+### Bucket S3 (hell-s3)
+
+| Atributo                            | Valor                                                        | Propósito                                                                                                    |
+|-----------------------------------|--------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------|
+| Región de AWS                     | EE.UU. Este (Norte de Virginia) us-east-1                    | Define la región donde se almacenan los datos para reducir latencia y cumplir requisitos regulatorios.      |
+| Tipo de bucket                   | Uso general                                                  | Recomendado para la mayoría de casos; permite varias clases de almacenamiento con redundancia en varias zonas. |
+| Tipo de bucket                   | Directorio                                                  | Para baja latencia; usa clase S3 Express One Zone, almacenando en una sola zona de disponibilidad.           |
+| Nombre del bucket                 | hell-s3                                                      | Identificador único global del bucket, con reglas estrictas de formato para su creación y acceso.            |
+| Copiar configuración de bucket existente | Opcional; formato: s3://bucket/prefijo                  | Permite replicar configuraciones de buckets existentes para consistencia o facilidad.                        |
+| Propiedad de objetos              | ACL deshabilitadas (recomendado)                             | Garantiza que todos los objetos sean propiedad de la cuenta del bucket y el acceso se controle por políticas. |
+| Propiedad de objetos              | ACL habilitadas                                              | Permite que objetos sean propiedad de otras cuentas AWS; controla acceso mediante listas de control de acceso. |
+| Configuración bloqueo acceso público | Bloquear todo el acceso público                             | Previene acceso público por ACL, políticas o puntos de acceso; protege los datos de accesos no autorizados.  |
+| Control de versiones             | Desactivar / Habilitar                                       | Permite mantener y restaurar múltiples versiones de objetos para recuperación ante errores o borrados.       |
+| Etiquetas                        | Opcional; hasta 50 etiquetas                                 | Facilita organización y seguimiento de costos mediante etiquetas personalizadas para el bucket.              |
+| Cifrado predeterminado           | SSE-S3 / SSE-KMS / DSSE-KMS                                 | Define cómo se cifran automáticamente los objetos nuevos para proteger datos en reposo.                      |
+| Clave de bucket                 | Desactivar / Habilitar                                       | Reduce costos de cifrado SSE-KMS usando claves de bucket; no compatible con DSSE-KMS.                        |
+| Bloqueo de objetos               | Desactivar / Habilitar                                       | Modelo WORM para impedir eliminación o sobrescritura de objetos, requiere control de versiones habilitado.   |
+
+---
+
+<img src="..\img\M5\L1\M5-L1-Caso-01.png">
+<img src="..\img\M5\L1\M5-L1-Caso-02.png">
+<img src="..\img\M5\L1\M5-L1-Caso-03.png">
+
+---
+
+### Lambda (hell-lambda)
+
+| Atributo                                         | Valor                                                                 |
+|--------------------------------------------------|-----------------------------------------------------------------------|
+| Habilitar URL de la función                      | Enable                                                                |
+| Habilitar VPC                                    | Enable                                                                |
+| VPC                                              | vpc-0c88db8efdc07ec84 (172.31.0.0/16)                                 |
+| Permitir tráfico IPv6                            | Disable                                                               |
+| Subredes seleccionadas                           | subnet-0004752ccbf27090b (us-east-1b)                                 |
+|                                                  | subnet-08cdc83ddbbd578b9 (us-east-1f)                                 |
+|                                                  | subnet-0c4637fb765a296c0 (us-east-1e)                                 |
+|                                                  | subnet-03b4431ce729dec73 (us-east-1c)                                 |
+|                                                  | subnet-030e652c1434c6e68 (us-east-1d)                                 |
+|                                                  | subnet-0c9d1a6c81c1ebcfd (us-east-1a)                                 |
+| Grupos de seguridad                              | sg-0d4eac31840b22460 (default VPC security group)                     |
+| Reglas de entrada del SG                         | Protocolo: All, Puertos: All, Origen: sg-0d4eac31840b22460            |
+| Reglas de salida del SG                          | -                                                                     |
+| Habilitar firma de código                        | Disable                                                               |
+| Cifrado con clave administrada por el cliente    | Disable                                                               |
+| Habilitar etiquetas                               | Disable                                                               |
+
+---
+
+<img src="..\img\M5\L1\M5-L1-Caso-04.png">
+<img src="..\img\M5\L1\M5-L1-Caso-05.png">
+<img src="..\img\M5\L1\M5-L1-Caso-06.png">
+
+---
+
+```python
+import boto3
+from datetime import datetime
+
+def lambda_handler(event, context):
+    # Configuración con región explícita
+    s3 = boto3.client('s3', region_name='us-east-1')  # Cambia a tu región
+    bucket_name = 'hell-s3'
+    image_key = 'helldivers.jpg'
+    
+    try:
+        # Verificación rápida (sin head_object para reducir tiempo)
+        presigned_url = s3.generate_presigned_url(
+            'get_object',
+            Params={'Bucket': bucket_name, 'Key': image_key},
+            ExpiresIn=3600
+        )
+        
+        # return {
+        #     'statusCode': 200,
+        #     'body': presigned_url
+        # }
+
+        return {
+            'statusCode': 302,
+            'headers': {
+                'Location': presigned_url
+            }
+        }
+        
+    except Exception as e:
+        return {
+            'statusCode': 500,
+            'body': f"Error: {str(e)}"
+        }
+```
+
+### Lambda (hell-agw)
+
+<img src="..\img\M5\L1\M5-L1-Caso-07.png">
+<img src="..\img\M5\L1\M5-L1-Caso-08.png">
+<img src="..\img\M5\L1\M5-L1-Caso-09.png">
+<img src="..\img\M5\L1\M5-L1-Caso-10.png">
+<img src="..\img\M5\L1\M5-L1-Caso-11.png">
+<img src="..\img\M5\L1\M5-L1-Caso-12.png">
+<img src="..\img\M5\L1\M5-L1-Caso-13.png">
+<img src="..\img\M5\L1\M5-L1-Caso-14.png">
