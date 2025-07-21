@@ -89,20 +89,45 @@ Diseñar y desplegar una red virtual privada (VPC) completamente desde cero para
 ---
 
 ## ⚙️ Crear y Configuración de Grupo de Seguridad 
+
+### 🔐 acme-sg-lambda
+
+- **Nombre**: acme-sg-lamda
+- **Descripción**: Permite que la funcion Lambda acceda a RDS PostgreSQL.
+- **VPC**: acme-vpc
+
+| Regla  | Tipo       | Protocolo | Puerto | Origen/Destino | Descripción                                                |
+| ------ | ---------- | --------- | ------ | -------------- | ---------------------------------------------------------- |
+| Salida | PostgreSQL | TCP       | 5432   | `acme-sg-rds`  | Permitir a Lambda conectarse a RDS PostgreSQL (SG del RDS) |
+---
+
+>[!IMPORTANT] Alert Las Lambdas no requieren reglas de entrada. Solo reglas de salida son necesarias para conexiones salientes (como a RDS).
+
+---
+
+<img src=".\img\P04-SG-01.png">
+
+---
+
 ### 🔐 acme-sg-rds
 
 - **Nombre**: acme-sg-rds
 - **Descripción**: Permite acceso a la base de datos PostgreSQL desde Lambda y desde el admin para pruebas.
 - **VPC**: acme-vpc
 
-| Regla | Tipo        | Protocolo | Puerto | Origen/Destino  | Descripción                                       |
-| --------- | ----------- | --------- | ------ | --------------- | ------------------------------------------------- |
-| Entrada   | PostgreSQL  | TCP       | 5432   | `MI_IP/32`      | Permitir acceso temporal a PostgreSQL desde pgAdmin |
-| Salida    | All Traffic | All       | All    | `0.0.0.0/0`     | Permitir todas las salidas (por defecto)          |
+| Regla   | Tipo        | Protocolo | Puerto | Origen/Destino   | Descripción                                              |
+| ------- | ----------- | --------- | ------ | ---------------- | -------------------------------------------------------- |
+| Entrada | PostgreSQL  | TCP       | 5432   | `MI_IP/32`       | Permitir acceso temporal desde pgAdmin |
+| Entrada | PostgreSQL  | TCP       | 5432   | `acme-sg-lambda` | Permitir conexion desde Lambda con acme sg rds          |
+| Salida  | All Traffic | All       | All    | `0.0.0.0/0`      | Permitir todas las salidas                 |
 
 ---
 
-## 🧾 Crear y Configuración de grupo de subredes de base de datos
+<img src=".\img\P04-SG-02.png">
+
+---
+
+## 🧾 Crear y Configuración de grupo de subredes de RDS
 
 | **Atributo**                | **Valor**                                         | **Motivo / Justificación**                                                                     |
 | --------------------------- | ------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
@@ -184,6 +209,130 @@ SELECT * FROM productos;
 DROP TABLE IF EXISTS productos;
 ```
 
+## 🧮 Crear y Configuración Lambda (Cómputo Serverless)
+
+### 📌 Objetivo
+- Crear una función Lambda escrita en Python que:
+- Sirva como una API RESTful (vía API Gateway).
+- Reciba una solicitud (GET/POST).
+- Devuelva una respuesta JSON con algún dato estático o dinámico.
+- Tenga permisos para leer desde el bucket acme-s3-static.
+
+### ⚙️ Función Lambda
+
+| Atributo         | Valor                          |
+| ---------------- | ------------------------------ |
+| Nombre           | `acme-lambda-api`              |
+| Runtime          | Python 3.12 (o más reciente)   |
+| Rol de ejecución | `LabRole`                      |
+| VPC              | `acme-vpc` (subredes privadas) |
+| Seguridad        | Asociado al `acme-sg-lambda`  |
+
+---
+
+<img src=".\img\P04-FUN-01.png">
+<img src=".\img\P04-FUN-02.png">
+
+---
+
+### psycopg2-binary
+- Es una versión empaquetada de psycopg2 (con los binarios incluidos) que facilita su instalación sin compilar.
+
+```
+lambda-psycopg2-layer/
+```
+
+```bash
+pip install pg8000 -t python
+```
+
+```
+lambda-psycopg2-layer/
+  └── python
+```
+
+### Lambda Layer
+- python -> python.zip
+
+| Parámetro                             | Valor                                                         | Descripción / Propósito                                                                                        |
+| ------------------------------------- | ------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| **Nombre**                            | `py-pg-layer`                                                 | Nombre identificativo de la capa para referenciarla fácilmente en tus funciones Lambda.                        |
+| **Descripción**                       | Capa con librería pg8000 para conexión a PostgreSQL en Lambda | Explica que esta capa incluye la librería `pg8000` para conectar funciones Lambda a bases de datos PostgreSQL. |
+| **Archivo ZIP**                       | `python.zip`                                                  | Archivo comprimido que contiene la carpeta `python` con todas las dependencias necesarias para la capa.        |
+| **Arquitecturas compatibles**         | `x86_64`                                                      | Arquitectura de CPU para la cual la capa está construida; debe coincidir con la arquitectura de tu Lambda.     |
+| **Versiones ejecutables compatibles** | `Python 3.13`                                                 | Versión(s) de Python en las que la capa puede usarse, debe coincidir con el runtime de tu función Lambda.      |
+
+---
+
+<img src=".\img\P04-FUN-03.png">
+
+---
+
+```python
+import json
+import pg8000.native
+from decimal import Decimal
+
+def lambda_handler(event, context):
+    try:
+        conn = pg8000.native.Connection(
+            user="postgres",
+            password="!nfra-48-x",
+            host="acme-pgdb.ccgvhugzcj7m.us-east-1.rds.amazonaws.com",
+            port=5432,
+            database="postgres"
+        )
+        
+        rows = conn.run("SELECT * FROM productos")
+        columns = [desc["name"] for desc in conn.columns]
+        result = [dict(zip(columns, row)) for row in rows]
+        
+        conn.close()
+
+        return {
+            'statusCode': 200,
+            'headers': {'Content-Type': 'application/json'},
+            'body': json.dumps(result, default=decimal_handler)
+        }
+    except Exception as e:
+        return {
+            'statusCode': 500,
+            'body': json.dumps({'error': str(e)})
+        }
+
+def decimal_handler(obj):
+    if isinstance(obj, Decimal):
+        return float(obj)
+    raise TypeError
+```
+
+---
+
+<img src=".\img\P04-FUN-04.png">
+
+---
+
+## 🌐 Crear API Gateway para Lambda
+
+<img src=".\img\P04-GW-01.png">
+<img src=".\img\P04-GW-02.png">
+<img src=".\img\P04-GW-03.png">
+<img src=".\img\P04-GW-04.png">
+<img src=".\img\P04-GW-05.png">
+<img src=".\img\P04-GW-06.png">
+<img src=".\img\P04-GW-07.png">
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -199,49 +348,14 @@ DROP TABLE IF EXISTS productos;
 
 ---
 ---
-
-
-> Para acme-sg-public (Grupo de Seguridad Público)
-- Reglas de Entrada (Inbound):
-
-| Tipo  | Protocolo | Puerto | Origen              | Descripción                    |
-| ----- | --------- | ------ | ------------------- | ------------------------------ |
-| HTTP  | TCP       | 80     | 0.0.0.0/0           | Permitir tráfico HTTP público  |
-| HTTPS | TCP       | 443    | 0.0.0.0/0           | Permitir tráfico HTTPS público |
-| SSH   | TCP       | 22     | Tu IP o 0.0.0.0/0\* | Acceso SSH para administración |
-
-- Reglas de Salida (Outbound):
-
-Permitir todo (0.0.0.0/0) en todos los puertos (por defecto está así, no necesitas cambiar).
-
-> Para acme-sg-backend (Grupo para Backend: Lambda, RDS, etc.)
-Reglas de Entrada (Inbound):
-
-- Reglas de Entrada (Inbound):
-
-| Tipo              | Protocolo | Puerto  | Origen                 | Descripción                            |
-| ----------------- | --------- | ------- | ---------------------- | -------------------------------------- |
-| HTTPS             | TCP       | 443     | `acme-sg-public` (ID)  | Permitir tráfico seguro desde frontend |
-| PostgreSQL        | TCP       | 5432    | `acme-sg-public` (ID)  | Permitir acceso a RDS desde frontend   |
-| TCP personalizado | TCP       | 0-65535 | `acme-sg-backend` (ID) | Comunicación interna entre backend     |
-
-- Reglas de Salida (Outbound):
-
-| Tipo  | Protocolo | Puerto | Destino   | Descripción                                       |
-| ----- | --------- | ------ | --------- | ------------------------------------------------- |
-| DNS   | UDP       | 53     | 0.0.0.0/0 | Resolución de nombres                             |
-| DNS   | TCP       | 53     | 0.0.0.0/0 | Resolución de nombres                             |
-| HTTPS | TCP       | 443    | 0.0.0.0/0 | Acceso a internet vía NAT (AWS SDK, S3, DynamoDB) |
-
 ---
-
-<img src=".\img\P04-GS-01.png">
-<img src=".\img\P04-GS-02.png">
-<img src=".\img\P04-GS-03.png">
-<img src=".\img\P04-GS-04.png">
-<img src=".\img\P04-GS-05.png">
-<img src=".\img\P04-GS-06.png">
-
+---
+---
+---
+---
+---
+---
+---
 ---
 
 ## 📦 Almacenamiento (Amazon S3)
@@ -263,130 +377,3 @@ Reglas de Entrada (Inbound):
 
 ---
 
-## 🔧 Crear la base de datos NoSQL (DynamoDB)
-
-| Atributo clave | Tipo   | Comentario                         |
-| -------------- | ------ | ---------------------------------- |
-| `id`           | String | Clave primaria (Partition Key)     |
-| `nombre`       | String | Nombre del producto                |
-| `descripcion`  | String | Detalle o descripción del producto |
-| `img`    | String | URL en S3 para imagen del producto |                           |
-| `precio`    | Number  | Precio del producto en USD                  |
-| `stock`     | Number  | Cantidad disponible                         |
-| `categoria` | String  | Categoría para clasificación                |
-| `destacado` | Boolean | Marca si es producto destacado en la tienda |
-
-
-```json
-[
-  {
-    "id": { "S": "prod-001" },
-    "nombre": { "S": "Dinamita Triple X" },
-    "descripcion": { "S": "¡Explosión garantizada! Ideal para túneles falsos en cañones." },
-    "img": { "S": "dinamita.png" },
-    "precio": { "N": "49.99" },
-    "stock": { "N": "120" },
-    "categoria": { "S": "Explosivos" },
-    "destacado": { "BOOL": true }
-  },
-  {
-    "id": { "S": "prod-002" },
-    "nombre": { "S": "Imán Industrial ACME" },
-    "descripcion": { "S": "Poder de atracción insuperable. No se hace responsable por atraer rocas, trenes o el propio Coyote." },
-    "img": { "S": "iman.png" },
-    "precio": { "N": "89.50" },
-    "stock": { "N": "60" },
-    "categoria": { "S": "Herramientas" },
-    "destacado": { "BOOL": false }
-  },
-  {
-    "id": { "S": "prod-003" },
-    "nombre": { "S": "Yunque Volador" },
-    "descripcion": { "S": "Clásico ACME. No garantizamos precisión en la caída." },
-    "img": { "S": "yunque.png" },
-    "precio": { "N": "199.90" },
-    "stock": { "N": "15" },
-    "categoria": { "S": "Pesados" },
-    "destacado": { "BOOL": true }
-  }
-]
-```
-
-<img src=".\img\P04-NDB-01.png">
-<img src=".\img\P04-NDB-02.png">
-<img src=".\img\P04-NDB-03.png">
-
----
-
-## 🧮 Cómputo Serverless (AWS Lambda + API Gateway)
-
-### 📌 Objetivo
-- Crear una función Lambda escrita en Python que:
-- Sirva como una API RESTful (vía API Gateway).
-- Reciba una solicitud (GET/POST).
-- Devuelva una respuesta JSON con algún dato estático o dinámico.
-- Tenga permisos para leer desde el bucket acme-s3-static.
-
-### ⚙️ Función Lambda
-
-| Atributo         | Valor                          |
-| ---------------- | ------------------------------ |
-| Nombre           | `acme-lambda-api`              |
-| Runtime          | Python 3.12 (o más reciente)   |
-| Rol de ejecución | `LabRole`                      |
-| VPC              | `acme-vpc` (subredes privadas) |
-| Seguridad        | Asociado al `acme-sg-backend`  |
-
----
-
-```python
-import json
-import boto3
-from boto3.dynamodb.conditions import Key
-
-dynamodb = boto3.resource('dynamodb')
-table = dynamodb.Table('acme-products')
-
-def lambda_handler(event, context):
-    try:
-        response = table.scan()
-        items = response.get('Items', [])
-        
-        return {
-            'statusCode': 200,
-            'headers': {'Content-Type': 'application/json'},
-            'body': json.dumps(items)
-        }
-    except Exception as e:
-        return {
-            'statusCode': 500,
-            'body': json.dumps({'error': str(e)})
-        }
-```
-
-<img src=".\img\P04-FUN-01.png">
-<img src=".\img\P04-FUN-02.png">
-
----
-
-## 🌐 Crear API Gateway para Lambda
-
-<img src=".\img\P04-GW-01.png">
-<img src=".\img\P04-GW-02.png">
-<img src=".\img\P04-GW-03.png">
-<img src=".\img\P04-GW-04.png">
-<img src=".\img\P04-GW-05.png">
-<img src=".\img\P04-GW-06.png">
-<img src=".\img\P04-GW-07.png">
-<img src=".\img\P04-GW-08.png">
-<img src=".\img\P04-GW-09.png">
-<img src=".\img\P04-GW-10.png">
-
-## Crear RDS, para Testear
-
-<img src=".\img\P04-RDS-01.png">
-<img src=".\img\P04-RDS-02.png">
-<img src=".\img\P04-RDS-03.png">
-<img src=".\img\P04-RDS-04.png">
-<img src=".\img\P04-RDS-05.png">
-<img src=".\img\P04-RDS-06.png">

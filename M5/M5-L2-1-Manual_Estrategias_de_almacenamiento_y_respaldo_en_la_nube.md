@@ -68,22 +68,6 @@
 ---
 
 ## **Diagrama de Arquitectura Híbrida**  
-```plaintext
-┌──────────────────────┐    ┌──────────────────────┐
-│   Data Center On-    │    │       AWS/Azure       │
-│      Premise         │    │                      │
-│ ┌──────────────────┐ │    │ ┌──────────────────┐ │
-│ │  Servidores Locales│◄───►│ │  Buckets S3/Blob │ │
-│ │  (Datos Críticos) │ │    │ │  (Cold Storage)  │ │
-│ └──────────────────┘ │    │ └──────────────────┘ │
-└──────────┬───────────┘    └──────────┬───────────┘
-           │                           │
-           ▼                           ▼
-┌──────────────────────┐    ┌──────────────────────┐
-│     VPN/Direct       │    │     Herramientas      │
-│      Connect         │    │     de Análisis       │
-└──────────────────────┘    └──────────────────────┘
-```
 
 ```mermaid
 graph TD
