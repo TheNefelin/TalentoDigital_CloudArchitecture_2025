@@ -141,8 +141,8 @@ graph TD
 ---
 
 <img src="..\Img\M5\L1\M5-L1-Caso-01.png">
-<img src="..\img\M5\L1\M5-L1-Caso-02.png">
-<img src="..\img\M5\L1\M5-L1-Caso-03.png">
+<img src="..\Img\M5\L1\M5-L1-Caso-02.png">
+<img src="..\Img\M5\L1\M5-L1-Caso-03.png">
 
 ---
 
@@ -169,9 +169,9 @@ graph TD
 
 ---
 
-<img src="..\img\M5\L1\M5-L1-Caso-04.png">
-<img src="..\img\M5\L1\M5-L1-Caso-05.png">
-<img src="..\img\M5\L1\M5-L1-Caso-06.png">
+<img src="..\Img\M5\L1\M5-L1-Caso-04.png">
+<img src="..\Img\M5\L1\M5-L1-Caso-05.png">
+<img src="..\Img\M5\L1\M5-L1-Caso-06.png">
 
 ---
 
@@ -214,11 +214,11 @@ def lambda_handler(event, context):
 
 ### Lambda (hell-agw)
 
-<img src="..\img\M5\L1\M5-L1-Caso-07.png">
-<img src="..\img\M5\L1\M5-L1-Caso-08.png">
-<img src="..\img\M5\L1\M5-L1-Caso-09.png">
-<img src="..\img\M5\L1\M5-L1-Caso-10.png">
-<img src="..\img\M5\L1\M5-L1-Caso-11.png">
-<img src="..\img\M5\L1\M5-L1-Caso-12.png">
-<img src="..\img\M5\L1\M5-L1-Caso-13.png">
-<img src="..\img\M5\L1\M5-L1-Caso-14.png">
+<img src="..\Img\M5\L1\M5-L1-Caso-07.png">
+<img src="..\Img\M5\L1\M5-L1-Caso-08.png">
+<img src="..\Img\M5\L1\M5-L1-Caso-09.png">
+<img src="..\Img\M5\L1\M5-L1-Caso-10.png">
+<img src="..\Img\M5\L1\M5-L1-Caso-11.png">
+<img src="..\Img\M5\L1\M5-L1-Caso-12.png">
+<img src="..\Img\M5\L1\M5-L1-Caso-13.png">
+<img src="..\Img\M5\L1\M5-L1-Caso-14.png">
