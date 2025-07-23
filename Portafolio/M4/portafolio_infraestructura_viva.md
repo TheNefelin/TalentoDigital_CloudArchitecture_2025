@@ -323,21 +323,3 @@ def decimal_handler(obj):
 <img src=".\img\P04-GW-07.png">
 
 ## 📦 Almacenamiento (Amazon S3)
-
-| Bucket Name       | Región      | Uso principal                | Acceso            | Ciclo de Vida         |
-| ----------------- | ----------- | ---------------------------- | ----------------- | --------------------- |
-| `acme-s3-static`  | `us-east-1` | Imágenes estáticas del sitio | Público o Privado | No                    |
-| `acme-s3-archive` | `us-east-1` | Datos viejos a archivar      | Privado           | S3 Glacier en 30 días |
-
----
-
-<img src=".\img\P04-S3-01.png">
-<img src=".\img\P04-S3-02.png">
-<img src=".\img\P04-S3-03.png">
-<img src=".\img\P04-S3-04.png">
-<img src=".\img\P04-S3-05.png">
-<img src=".\img\P04-S3-06.png">
-<img src=".\img\P04-S3-07.png">
-
----
-
