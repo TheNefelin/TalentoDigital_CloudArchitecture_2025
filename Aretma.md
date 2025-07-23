@@ -490,9 +490,13 @@ def decimal_handler(obj):
 - **Lambda function**: artema-lambda-rds
 - **Stages**
     - $default : https://2g2796no0c.execute-api.us-east-1.amazonaws.com/hunters
+- **CORS**
+    - Access-Control-Allow-Origin: *
+    - Access-Control-Allow-Headers: content-type
+    - Access-Control-Allow-Methods: GET
+    - Access-Control-Allow-Credentials: NO
+    
+## **CloudWatch**: (servicio de monitoreo)
 
 ## **NAT Gateway**: Network Address Translation Gateway
-
-
-## **CloudWatch**: (servicio de monitoreo)
 
