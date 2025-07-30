@@ -26,3 +26,33 @@
 
 - **Confiabilidad**  
   La capacidad del sistema de respaldo en la nube para mantener sus funciones, proteger los datos y recuperarse ante fallos, asegurando disponibilidad continua.
+
+---
+
+## Crucigrama
+
+Proceso de mejora continua orientado a optimizar el uso de recursos y el rendimiento del sistema.
+- optimización
+
+Arquitectura de software que divide una aplicación en servicios pequeños e independientes para facilitar su mantenimiento y escalado
+- microservicios
+
+Mecanismo que ajusta automáticamente el número de instancias de cómputo según la demanda del sistema.
+- autoescaling
+
+Capacidad de un sistema para adaptarse a incrementos en la carga de trabajo sin perder rendimiento
+- escalabilidad
+
+Proceso de coordinación y gestión de los componentes de un sistema para mejorar su rendimiento y eficiencia
+- orquestación
+
+Tecnología que permite empaquetar y desplegar aplicaciones de forma aislada y portátil.
+- contenedores
+
+Capacidad de un sistema para mantenerse operativo incluso ante fallos o picos de demanda.
+- disponibilidad
+
+Análisis de los gastos relacionados con la implementación y operación de una solución escalable en la nube.
+- costo
+
+---
