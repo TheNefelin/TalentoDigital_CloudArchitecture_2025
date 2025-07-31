@@ -42,6 +42,13 @@
     - Destination type: Anywhere-IPv4
     - Destination: 0.0.0.0/0 (MyIP)
     - Description: Acceso SSH temporal desde cualquier IP
+  - HTTP
+    - Type: HTTP
+    - Protocol: TCP
+    - Port range: 80
+    - Destination type: Anywhere-IPv4
+    - Destination: 0.0.0.0/0
+    - Description: Acceso web al balanceador
   - HTTPS
     - Type: HTTPS
     - Protocol: TCP
@@ -88,8 +95,23 @@
 
 ### artema-sg-lb
 - **Name**: artema-sg-lb
-- **Description**: SG para Load balancers
+- **Description**: Habilitar acceso web a load balancer
 - **VPC**: artema-vpc
+- **Inbound rules**:
+  - HTTP
+    - Type: HTTP
+    - Protocol: TCP
+    - Port range: 80
+    - Destination type: Anywhere-IPv4
+    - Destination: 0.0.0.0/0
+    - Description: Acceso web al balanceador
+  - HTTPS
+    - Type: HTTPS
+    - Protocol: TCP
+    - Port range: 443
+    - Destination type: Anywhere-IPv4
+    - Destination: 0.0.0.0/0
+    - Description: Acceso web al balanceador    
 - **Outbound rules**:
   - Outbound
     - Type: All traffic
@@ -118,6 +140,10 @@
 - **security groups**: artema-sg-bastion
 - **Advanced network configuration**:
   - **Auto-assign public IP**: Enable
+- **Resource tags**
+  - **Key**: Name
+  - **Value**: artema-ec2-bastion
+  - **Resource types**: Instances
 
 ### Launch instance from template
 - **Source template**: artema-lt-ec2-bastion
@@ -128,10 +154,22 @@
 
 ## **EC2 Load balancers**:
 ### Target groups
-- **Group Details**: Application Load Balancer
-- **Name**: artema-target-lb
+- **target type**: Instances
+- **Name**: artema-tg-lb-bastion
+- **Protocol**: TCP
+- **Port**: 22
 - **VPC**: artema-vpc
+- **Health check protocol**: HTTP 
+- **Health check path**: /
+- **Traffic port**: check
+- **Healthy threshold**: 3
+- **Unhealthy threshold**: 3
 - **Application Load Balancer**: artema-lb-bastion
+- **Timeout**: 6
+- **Interval**: 30
+- **Register Application Load Balancer**:
+  - **Port**: Use the target group port 80
+  - **Application Load Balancer**: artema-lb-bastion
 
 ### Load balancers
 - **Name**: artema-lb-bastion
@@ -139,14 +177,16 @@
 - **us-east-1a (use1-az4)**: artema-subnet-public1-us-east-1a
 - **us-east-1b (use1-az6)**: artema-subnet-public2-us-east-1b
 - **Security groups**: artema-sg-lb
+- **Default action**: artema-target-lb
 
-
-### artema-lb-rds
-- **Name**: artema-lb-rds
-- **VPC**: artema-vpc
-- **us-east-1a (use1-az4)**: artema-subnet-public1-us-east-1a
-- **us-east-1b (use1-az6)**: artema-subnet-public2-us-east-1b
-- ****
+### Auto Scaling groups
+- **Name**: artema-asg
+- **Launch template**: artema-lt-ec2-bastion
+- **VPC**: (artema-vpc)
+- **Availability Zones and subnets**:
+  - artema-subnet-public1-us-east-1a 
+  - artema-subnet-public2-us-east-1b
+- **Health check**: check
 
 ---
 
