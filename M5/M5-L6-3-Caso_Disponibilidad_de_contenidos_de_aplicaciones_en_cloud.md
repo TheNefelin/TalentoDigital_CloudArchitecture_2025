@@ -22,13 +22,13 @@
 
 ```mermaid
 flowchart TD
-    A[Users 🌍] --> B[Route 53<br/>(DNS global)]
-    B --> C[CloudFront<br/>(CDN + HTTPS + Cache)]
-    C --> D[ALB<br/>(Application Load Balancer)]
-    D --> E[Auto Scaling Group<br/>(EC2 en múltiples AZ)]
-    E --> F[EC2 Instances<br/>(API/Media backend)]
-    F --> G[S3<br/>(Contenido estático)]
-    F --> H[RDS<br/>(Base de datos)]
+    A[Users 🌍] --> B[Route 53 <br/> DNS global]
+    B --> C[CloudFront <br/> CDN + HTTPS + Cache]
+    C --> D[ALB <br/> Application Load Balancer]
+    D --> E[Auto Scaling Group <br/> EC2 en múltiples AZ]
+    E --> F[EC2 Instances <br/> API/Media backend]
+    F --> G[S3 <br/> Contenido estático]
+    F --> H[RDS <br/> Base de datos]
 ```
 
 ### 🧱 Servicios Utilizados
