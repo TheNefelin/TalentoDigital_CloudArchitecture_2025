@@ -2,21 +2,31 @@
 
 ## 1. Resumen del Proyecto
 Breve descripción del objetivo del sistema, los usuarios clave y el problema que resuelve.
+Ejemplo: Desarrollar una plataforma SaaS para la gestión de proyectos ágil, dirigida a equipos de desarrollo remotos, con el fin de mejorar la colaboración y la eficiencia en la entrega de software.
 
 ## 2. Alcance
-- Funcionalidades incluidas en esta fase
-- Exclusiones
-- Límites técnicos
+- **Funcionalidades incluidas en esta fase**: Listar funcionalidades clave para esta etapa del proyecto. Ej: Gestión de tareas, seguimiento de progreso, comunicación en tiempo real, autenticación de usuarios.
+- **Exclusiones**: Funcionalidades que NO se abordarán en esta fase. Ej: Integraciones con sistemas de terceros, reportes avanzados, módulos de facturación.
+- **Límites técnicos**: Restricciones o decisiones técnicas iniciales. Ej: Uso exclusivo de AWS, base de datos relacional, lenguaje de backend NodeJS.
+
 
 ## 3. Requisitos
 ### 3.1 Requisitos funcionales
 - [ ] Listar funcionalidades clave del sistema
+- [ ] **Funcionalidad 1**: Descripción concisa. Ej: Los usuarios deben poder crear y asignar tareas.
+- [ ] **Funcionalidad 2**: Descripción concisa. Ej: El sistema debe permitir adjuntar archivos a las tareas.
+- [ ] **Funcionalidad N**: ...
 
 ### 3.2 Requisitos no funcionales
-- Alta disponibilidad: [% uptime esperado]
-- Escalabilidad: [automática / manual / vertical / horizontal]
-- Seguridad: [cifrado, IAM, etc.]
-- Tiempo de respuesta esperado: [ms/segundos]
+- **Alta disponibilidad**: [% uptime esperado. Ej: 99.95%]
+- **Escalabilidad**: [Tipo de escalabilidad y cómo se manejará. Ej: Automática y horizontal, para soportar hasta 10,000 usuarios concurrentes sin degradación del rendimiento.]
+- **Seguridad**: [Aspectos clave de seguridad. Ej: Cifrado de datos en reposo y en tránsito (SSL/TLS), gestión de identidad y acceso (IAM), protección contra ataques DDoS (AWS Shield).]
+- **Tiempo de respuesta esperado**: [ms/segundos. Ej: Tiempo de carga de página &lt; 2 segundos, respuesta de API &lt; 500 ms.]
+- **Rendimiento**: [Métricas de rendimiento. Ej: Soporte para X transacciones por segundo.]
+- **Latencia**: [Expectativa de latencia. Ej: Baja latencia para usuarios globales a través de CDN.]
+- **Observabilidad**: [Capacidad de monitoreo. Ej: Monitoreo de logs, métricas y trazas para identificar problemas rápidamente.]
+- **Costo**: [Restricciones presupuestarias. Ej: Costo mensual de infraestructura no debe exceder X USD en la fase inicial.]
+- **Cumplimiento**: [Normativas a cumplir. Ej: GDPR, ISO 27001, HIPAA (si aplica).]
 
 ## 4. Arquitectura Propuesta
 ### 4.1 Descripción general

@@ -2,7 +2,7 @@
 
 ## Diagrama
 
-<img src=".\Img\Artema.drawio.png">
+<img src="..\Img\Artema1.drawio.png">
 
 ## **VPC**: Virtual Private Cloud
 ### artema-vpc

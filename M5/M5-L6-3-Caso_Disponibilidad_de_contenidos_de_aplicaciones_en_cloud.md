@@ -23,12 +23,11 @@
 ```mermaid
 flowchart TD
     A[Users 🌍] --> B[Route 53 <br/> DNS global]
-    B --> C[CloudFront <br/> CDN + HTTPS + Cache]
-    C --> D[ALB <br/> Application Load Balancer]
-    D --> E[Auto Scaling Group <br/> EC2 en múltiples AZ]
-    E --> F[EC2 Instances <br/> API/Media backend]
-    F --> G[S3 <br/> Contenido estático]
-    F --> H[RDS <br/> Base de datos]
+    B --> C[ALB <br/> Application Load Balancer]
+    C --> D[Auto Scaling Group <br/> EC2 en múltiples AZ]
+    D --> E[EC2 Instances <br/> Servidores web con caché Nginx]
+    E --> F[S3 <br/> Contenido estático]
+    E --> G[RDS <br/> Base de datos]
 ```
 
 ### 🧱 Servicios Utilizados
@@ -122,3 +121,80 @@ La arquitectura propuesta resuelve los problemas actuales de MediaStream:
 - Ofrece escalabilidad automática y balanceo ante alta demanda.
 - Protege los contenidos multimedia mediante controles robustos.
 - Brinda una solución segura, resiliente y alineada con buenas prácticas de AWS.
+
+---
+
+##  Desarrollo
+
+## **VPC**: Virtual Private Cloud
+### mediastream-vpc
+- **VPC settings**: VPC and more
+- **Name**: mediastream
+- **IPv4 CIDR block**: 10.0.0.0/16
+- **IPv6 CIDR block**: No IPv6 CIDR block
+- **Tenancy**: Default
+- **Number of Availability Zones**: 2
+- **Customize AZs**:
+  - us-east-1a
+  - us-east-1b
+- **Number of public subnets**: 2
+- **Number of private subnets**: 2
+- **Customize subnets CIDR blocks**:
+  - Public subnet CIDR block in us-east-1a: 10.0.0.0/20
+  - Public subnet CIDR block in us-east-1b: 10.0.16.0/20
+  - Private subnet CIDR block in us-east-1a: 10.0.128.0/20
+  - Private subnet CIDR block in us-east-1b: 10.0.144.0/20
+- **NAT gateways**: 1 per AZ
+- **VPC endpoints**: None
+- **Enable DNS hostnames**: Check
+- **Enable DNS resolution**: Check
+
+---
+
+## **S3**: Storage
+### backet mediastream-s3-storage
+- **AWS Region**: us-east-1
+- **Name**: mediastream-s3-storage
+- **Object Ownership**: ACLs disabled
+- **Block all public access**: uncheck
+- **Bucket Versioning**: Disable
+- **Encryption type**: SSE-S3
+- **Bucket Key**: Disable
+- **Properties**:
+  - **Static website hosting**: Enable
+  - **Host a static website**: Check
+  - **Index document**: index.html
+  - **Error document**: error.html
+- **Permissions**:
+  - **Bucket policy**
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "PublicReadGetObject",
+      "Effect": "Allow",
+      "Principal": "*",
+      "Action": "s3:GetObject",
+      "Resource": "arn:aws:s3:::mediastream-s3-storage/*"
+    }
+  ]
+}
+```
+
+---
+
+## CloudFront (Sin Permisos)
+### mediastream-cf-web
+- **Name**: mediastream-cf-web
+- **Description**: mediastream web
+- **Distribution type**: Single website or app
+- **Origin type**: Amazon S3
+- **S3 origin**: mediastream-s3-storage.s3-website-us-east-1.amazonaws.com
+- **Origin path**: 
+- **Allow private S3 bucket access to CloudFront**: check
+- **Origin settings**: Use recommended origin settings
+- **Web Application Firewall**: Do not enable security protections
+
+--- 
+
