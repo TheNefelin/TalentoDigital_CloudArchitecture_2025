@@ -1,4 +1,4 @@
-# AWS - AUTOSCALING-LOADBALANCER
+# AWS - AUTOSCALING LOADBALANCER
 
 <img src="..\Img\Ejercicio1.drawio.png">
 
@@ -33,7 +33,7 @@
 ---
 
 ## **Seciruty Group**: 
-### artema-sg-bastion
+### ejercicio1-sg-firewall
 - **Name**: ejercicio1-sg-firewall
 - **Description**: firewall
 - **VPC**: ejercicio1-vpc
