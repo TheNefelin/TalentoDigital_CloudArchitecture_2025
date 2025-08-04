@@ -425,10 +425,16 @@ S3
   - **User data**
 ```bash
 #!/bin/bash
-yum install -y httpd
-systemctl enable httpd
-systemctl start httpd
-echo '<html><h1>EC2 Corriendo!!!</h1></html>' > /var/www/html/index.html
+yum update -y
+yum install nginx -y
+yum install awscli -y
+aws s3 sync s3://mediastream-s3-storage/ /usr/share/nginx/html/
+chown -R nginx:nginx /usr/share/nginx/html/
+chmod -R 755 /usr/share/nginx/html/
+systemctl stop httpd
+systemctl disable httpd
+systemctl enable nginx
+systemctl start nginx
 ```
 
 ### 5.2 Target Groups
