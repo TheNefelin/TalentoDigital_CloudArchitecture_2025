@@ -109,11 +109,11 @@ Basado en las limitaciones del AWS Learner Lab (sin CloudFront, restricciones en
 ## 🛠️ Arquitectura Adaptada para Learner Lab
 ```mermaid
 flowchart TD
-    A[Users] --> B[Route 53<br/>(DNS básico)]
+    A[Users] --> B[Route 53 <br/> DNS básico]
     B --> C[Application Load Balancer]
-    C --> D[Auto Scaling Group<br/>(EC2 t3.micro/small)]
-    D --> E[S3 Bucket<br/>(Contenido estático)]
-    D --> F[RDS micro/small<br/>(Metadatos)]
+    C --> D[Auto Scaling Group <br/> EC2 t3.micro/small]
+    D --> E[S3 Bucket <br/> Contenido estático]
+    D --> F[RDS micro/small <br/> Metadatos]
 ```
 
 ## 🔄 Cambios Clave por Restricciones
@@ -196,7 +196,11 @@ Esta solución adaptada:
 # ✅ Implementación Paso a Paso – Arquitectura Adaptada para AWS Learner Lab
 Esta sección guía la creación manual de los componentes clave usando la consola de AWS o comandos compatibles.
 
-## 1. VPC: Virtual Private Cloud
+<img src="..\Img\M5\L7\MediaStream.drawio.png">
+
+---
+
+## **1. VPC: Virtual Private Cloud**
 ### mediastream-vpc
 - **VPC settings**: VPC and more
 - **Name**: mediastream
@@ -214,12 +218,117 @@ Esta sección guía la creación manual de los componentes clave usando la conso
   - Public subnet CIDR block in us-east-1b: 10.0.16.0/20
   - Private subnet CIDR block in us-east-1a: 10.0.128.0/20
   - Private subnet CIDR block in us-east-1b: 10.0.144.0/20
-- **NAT gateways**: 1 per AZ
+- **NAT gateways**: In 1 AZ
 - **VPC endpoints**: None
 - **Enable DNS hostnames**: Check
 - **Enable DNS resolution**: Check
 
-## 2. S3: Almacenamiento Estático
+---
+
+## 2. Security Groups:
+### mediastream-sg-firewall
+- **Name**: mediastream-sg-firewall
+- **Description**: firewall
+- **VPC**: mediastream-vpc
+- **Inbound rules**:
+  - SSH
+    - Type: SSH
+    - Protocol: TCP
+    - Port range: 22
+    - Destination type: Anywhere-IPv4
+    - Destination: 0.0.0.0/0 (MyIP)
+    - Description: Acceso desde SSH
+  - Escritorio Remoto
+    - Type: SSH
+    - Protocol: RDP
+    - Port range: 3389
+    - Destination type: Anywhere-IPv4
+    - Destination: 0.0.0.0/0 (MyIP)
+    - Description: Acceso desde Escritorio Remoto
+  - HTTP
+    - Type: HTTP
+    - Protocol: TCP
+    - Port range: 80
+    - Destination type: Anywhere-IPv4
+    - Destination: 0.0.0.0/0
+    - Description: Acceso web
+  - HTTPS
+    - Type: HTTPS
+    - Protocol: TCP
+    - Port range: 443
+    - Destination type: Anywhere-IPv4
+    - Destination: 0.0.0.0/0
+    - Description: Acceso web
+- **Outbound rules**:
+  - Outbound
+    - Type: All traffic
+    - Protocol: all
+    - Port range: all
+    - Destination type: Custom
+    - Destination: 0.0.0.0/0
+    - Description: 
+
+### mediastream-sg-lb
+- **Name**: mediastream-sg-lb
+- **Description**: load balancer
+- **VPC**: mediastream-vpc
+- **Inbound rules**:
+  - HTTP
+    - Type: HTTP
+    - Protocol: TCP
+    - Port range: 80
+    - Destination type: Anywhere-IPv4
+    - Destination: 0.0.0.0/0
+    - Description: Acceso web
+- **Outbound rules**:
+  - Outbound
+    - Type: All traffic
+    - Protocol: all
+    - Port range: all
+    - Destination type: Custom
+    - Destination: 0.0.0.0/0
+    - Description: 
+
+### artema-sg-rds
+- **Name**: mediastream-sg-rds
+- **Description**: postgresql
+- **VPC**: mediastream-vpc
+- **Inbound rules**:
+  - PostgreSQL
+    - Type: PostgreSQL
+    - Protocol: TCP
+    - Port range: 5432
+    - Destination type: Custom
+    - Destination: 0.0.0.0/0
+    - Description: Acceso a PostgreSQL
+- **Outbound rules**:
+  - Outbound
+    - Type: All traffic
+    - Protocol: all
+    - Port range: all
+    - Destination type: Custom
+    - Destination: 0.0.0.0/0
+    - Description: 
+securit
+### PuTTY
+- Session
+    - HostName: BastionIP
+- Connection
+    - Seconds: 30
+    - SSH
+        - Auth
+            - Credentials
+                - Private Key: artema-key.ppk
+        - Tunnels      
+            - Source port: 5433
+            - Destination: RDS-Endpoint + : + 5432
+### Console
+```bash
+ec2-user
+```
+---
+
+## **3. S3: Almacenamiento Estático**
 ### Bucket: mediastream-s3-storage
 - **Region**: us-east-1
 - **Name**: mediastream-s3-storage
@@ -227,77 +336,219 @@ Esta sección guía la creación manual de los componentes clave usando la conso
 - **Block all public access**: ❌ (desactivado solo si usas políticas restrictivas)
 - **Versioning**: Desactivado
 - **Encryption**: SSE-S3
-- **Static website hosting**: ✅ Activado
+- **Bucket Key**: Disable
+- **Create bucket**
+- **Properties**:
+  - **Static website hosting**: ✅ Activado
+  - **Hosting type**: Host a static website
   - **Index document**: index.html
   - **Error document**: error.html
-- **Bucket Policy**:
+  - **Save changes**
+- **Permissions**:
+  - **Bucket Policy**:
 ```json
 {
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Sid": "PublicReadGetObject",
-      "Effect": "Allow",
-      "Principal": "*",
-      "Action": "s3:GetObject",
-      "Resource": "arn:aws:s3:::mediastream-s3-storage/*"
-    }
-  ]
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": "PublicReadGetObject",
+            "Effect": "Allow",
+            "Principal": {
+                "AWS": "arn:aws:iam::992136605746:role/LabRole"
+            },
+            "Action": [
+                "s3:GetObject",
+                "s3:ListBucket"
+            ],
+            "Resource": [
+                "arn:aws:s3:::mediastream-s3-storage",
+                "arn:aws:s3:::mediastream-s3-storage/*"
+            ]
+        }
+    ]
 }
 ```
 
----
-
-## **3. EC2 Auto Scaling Group**
-### Plantilla de Lanzamiento
-- AMI: Amazon Linux 2 o equivalente con Nginx
-- Tipo de instancia: t3.micro
-- Par de llaves: vockey (en us-east-1)
-- IAM Role: LabRole
-- User Data:
-```bash
-#!/bin/bash
-yum update -y
-amazon-linux-extras install nginx1 -y
-systemctl enable nginx
-systemctl start nginx
+```
+S3
+└── Bucket: mediastream-s3-storage
+    ├── css/
+    │   └── style.css
+    ├── data/
+    │   └── characters.json
+    ├── img/
+    │   ├── biscuit.webp
+    │   ├── chrollo.webp
+    │   ├── gon.webp
+    │   ├── hisoka.webp
+    │   ├── killua.webp               
+    │   ├── kurapika.webp
+    │   └── leorio.webp
+    ├── js/
+    │   └── script.js        
+    ├── error.html
+    └── index.html
 ```
 
-### Auto Scaling Group
-- Min instances: 2
-- Max instances: 6 (límite de vCPU)
-- Health check: EC2 + ALB
-- Escalado:
-  - Política de incremento: +2 instancias al 70% CPU
-  - Política de decremento: -1 instancia al 30% CPU
+---
+
+## **4. SNS**: Simple Notification Service 
+### Topics
+- **Topics**: Standard
+- **Name**: mediastream-sns
+
+### Create subscription
+- **Topic ARN**: mediastream-sns
+- **Protocol**: mail@mail.cl
 
 ---
 
-## **4. Application Load Balancer (ALB)**
-- Tipo: Internet-facing
-- Listeners: HTTP (puerto 80), HTTPS (443 si tienes certificado)
-- Target Group: EC2 Auto Scaling Group
-- Health checks: HTTP / (raíz)
-- Subnets: públicas de las AZs
-- Security Group: permitir tráfico HTTP/HTTPS desde 0.0.0.0/0
+## **5. EC2 Auto Scaling**
+### 5.1 Launch template
+- **Name**: mediastream-lt-ec2
+- **Description**: Plantilla base para instancias
+- **OS Images**: Amazon Linux
+- **Amazon Machine Image**: Amazon Linux 2023 kernel-6.1 AMI
+- **Instance type**: t3.micro
+- **Key pair**: vockey (.ppk)
+- **Subnet**: Don't include in launch template
+- **Availability Zone**: Don't include in launch template
+- **security groups**: mediastream-sg-firewall
+- **Advanced network configuration**:
+  - **Auto-assign public IP**: Enable
+- **Resource tags**
+  - **Key**: Name
+  - **Value**: mediastream-ec2-web
+  - **Resource types**: Instances
+- **Advanced details**:
+  - **IAM instance profile**: LabInstanceProfile
+  - **User data**
+```bash
+#!/bin/bash
+yum install -y httpd
+systemctl enable httpd
+systemctl start httpd
+echo '<html><h1>EC2 Corriendo!!!</h1></html>' > /var/www/html/index.html
+```
+
+### 5.2 Target Groups
+- **target type**: Instances
+- **Name**: mediastream-tg-ec2
+- **Protocol**: HTTP
+- **Port**: 80
+- **VPC**: mediastream-vpc
+- **Health check protocol**: HTTP 
+- **Health check path**: /
+- **Advanced health check settings**:
+  - **Traffic port**: check
+  - **Healthy threshold**: 5
+  - **Unhealthy threshold**: 2
+  - **Timeout**: 5
+  - **Interval**: 30
+
+### 5.3 Load Balancers
+- **Load balancer types**: Application Load Balancer
+- **Name**: mediastream-lb-ec2
+- **Scheme**: Internal
+- **Load balancer IP address type**: IPv4
+- **VPC**: mediastream-vpc
+- **us-east-1a (use1-az4)**: mediastream-subnet-public1-us-east-1a
+- **us-east-1b (use1-az6)**: mediastream-subnet-public2-us-east-1b
+- **Security groups**: mediastream-sg-lb
+- **Protocol**: HTTP
+- **Port**: 80
+- **Default action (target group)**: mediastream-tg-ec2
+
+### 5.4 Auto Scaling Groups
+- **Name**: mediastream-asg
+- **Launch template**: mediastream-lt-ec2
+- **VPC**: mediastream-vpc
+- **Availability Zones and subnets**:
+  - mediastream-subnet-public1-us-east-1a 
+  - mediastream-subnet-public2-us-east-1b
+- **Availability Zone distribution**: Balanced best effort
+- **Load balancing**: Attach to an existing load balancer
+- **Attach to an existing load balancer**: Choose from your load balancer target groups
+- **Existing load balancer target groups**: mediastream-tg-ec2 | HTTP
+- **Select VPC Lattice service to attach**: 
+No VPC Lattice service
+- **Health check**:
+  - **Turn on Elastic Load Balancing health checks**: check
+- **Health check grace period**: 30
+- **Desired capacity** : 1
+- **Min desired capacity**: 1
+- **Max desired capacit**y: 4
+- **Choose whether to use a target tracking policy**: Target tracking scaling policy
+- **Scaling policy name**: mediastream-policy-ec2
+- **Metric type**: Average CPU utilization
+- **Target value**: 80
+- **Instance warmup**: 30
+- **Disable scale in to create only a scale-out policy** uncheck
+- **Additional settings**:
+  - **Enable group metrics collection within CloudWatch**: check
+- **Add notifications**: mediastream-sns
 
 ---
 
-## 5. RDS: Base de Datos
-### PostgreSQL / MySQL
-- Tipo de instancia: db.t3.micro
-- Multi-AZ: ✅ Activado
-- Storage: gp2, 20–50 GB
-- Backup: 7 días
-- VPC: mediastream-vpc
-- Subnets: privadas
-- Acceso: solo desde las instancias EC2 (por SG)
+## **6. RDS**: Relational Database Service (servicio de base de datos)
+### DRS Subnet Group
+- **Name**: mediastream-rds-sng
+- **Description**: Private subnet group para PostgreSQL
+- **VPC**: artema-vpc
+- **Availability Zones**:
+    - us-east-1a
+    - us-east-1b
+- **Subnets**:
+    - mediastream-subnet-private1-us-east-1a
+    - mediastream-subnet-private2-us-east-1b
 
-💡 **Nota**: Crear un Security Group que permita acceso en el puerto 3306 (MySQL) o 5432 (PostgreSQL) solo desde las EC2.
+### PostgreSQL
+- **Creation method**: Standard create
+- **Engine type**: PostgreSQL
+- **Templates**: Dev/Test
+- **Availability and durability**: Multi-AZ DB instance deployment (2 instances)
+- **DB instance**: mediastream-pgdb
+- **Master username**: postgres
+- **Credentials management**: ********
+- **Instance configuration**:
+    - Burstable classes (includes t classes)
+    - db.t3.micro
+- **Allocated storage**: 3GiB
+- **Connectivity**: Connect to an EC2 compute resource
+- **Compute resource**: artema-bastion
+- **VPC**: artema-vpc
+- **DB subnet group**: artema-rds-sng
+- **Public access**: No
+- **Security groups**: artema-sg-rds
+- **Enhanced Monitoring**: Disabled  
+
+```sql
+CREATE TABLE personajes_hxh (
+    id SERIAL PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL,
+    tipo_nen VARCHAR(50) NOT NULL,
+    edad INT NOT NULL,
+    descripcion TEXT,
+    img VARCHAR(100)
+);
+```
+
+```sql
+INSERT INTO personajes_hxh 
+    (nombre, tipo_nen, edad, descripcion, img)
+VALUES
+    ('Gon Freecss', 'Enhancer', 12, 'Protagonista, con gran talento natural para el Nen.', 'gon.webp'),
+    ('Killua Zoldyck', 'Transmuter', 12, 'Hijo de la familia asesina Zoldyck, amigo cercano de Gon.', 'killua.webp'),
+    ('Kurapika', 'Conjurer', 17, 'Último sobreviviente del clan Kurta, busca venganza.', 'kurapika.webp'),
+    ('Leorio Paradinight', 'Emitter', 19, 'Aspira a ser médico, es valiente y decidido.', 'leorio.webp'),
+    ('Hisoka Morow', 'Transmuter', 28, 'Antagonista impredecible, disfruta de la pelea.', 'hisoka.webp'),
+    ('Chrollo Lucilfer', 'Specialist', 30, 'Líder de la banda de ladrones Fantasma.', 'chrollo.webp'),
+    ('Biscuit Krueger', 'Enhancer', 30, 'Maestra experimentada con apariencia joven.', 'biscuit.webp');
+```
 
 ---
 
-## 6. Route 53: DNS
+## 7. Route 53: DNS
 - Crear zona hospedada pública: ej. `mediastreamlab.com`
 - Crear registros A:
   - `www` → ALB DNS Name
@@ -307,7 +558,7 @@ systemctl start nginx
 
 ---
 
-## 7. Seguridad: IAM y Contenidos
+## 8. Seguridad: IAM y Contenidos
 ## **Seguridad de Contenidos**
 1. **IAM Role**: usar `LabRole` preconfigurado
 2. **Encriptación S3**:
@@ -322,7 +573,7 @@ s3.upload_file(..., ExtraArgs={'ServerSideEncryption': 'AES256'})
 
 ---
 
-### **8. Monitoreo y Costos**
+### **9. Monitoreo y Costos**
 - **AWS Budgets**: Configurar alerta al 80% del presupuesto
 - **CloudWatch**: Monitoreo de CPU y escalado
 - **Tag Editor**: Eliminar recursos con etiquetas diarias

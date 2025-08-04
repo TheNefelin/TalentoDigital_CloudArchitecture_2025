@@ -4,9 +4,17 @@
     {
       "Sid": "PublicReadGetObject",
       "Effect": "Allow",
-      "Principal": "*",
-      "Action": "s3:GetObject",
-      "Resource": "arn:aws:s3:::bucket-s3-name/*"
+      "Principal": {
+        "AWS": "arn:aws:iam::992136605746:role/LabRole"
+      },
+      "Action": [
+        "s3:GetObject",
+        "s3:ListBucket"
+      ],
+      "Resource": [
+        "arn:aws:s3:::BUCKET_NAME",
+        "arn:aws:s3:::BUCKET_NAME/*"
+      ]
     }
   ]
 }
