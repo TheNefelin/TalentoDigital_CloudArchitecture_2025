@@ -196,7 +196,7 @@ Esta solución adaptada:
 # ✅ Implementación Paso a Paso – Arquitectura Adaptada para AWS Learner Lab
 Esta sección guía la creación manual de los componentes clave usando la consola de AWS o comandos compatibles.
 
-<img src="..\Img\M5\L7\MediaStream.drawio.png">
+<img src="..\Img\M5\L6\MediaStream.drawio.png">
 
 ---
 
