@@ -520,8 +520,8 @@ No VPC Lattice service
     - Burstable classes (includes t classes)
     - db.t3.micro
 - **Allocated storage**: 3GiB
-- **Connectivity**: Connect to an EC2 compute resource
-- **Compute resource**: artema-bastion
+- **Connectivity**: none
+- **Compute resource**: none
 - **VPC**: artema-vpc
 - **DB subnet group**: artema-rds-sng
 - **Public access**: No
@@ -554,36 +554,48 @@ VALUES
 
 ---
 
-## 7. Route 53: DNS
-- Crear zona hospedada pública: ej. `mediastreamlab.com`
-- Crear registros A:
-  - `www` → ALB DNS Name
-- Opción: crear un registro con redirección HTTP a HTTPS si se habilita SSL
+## **7. Route 53**: DNS
+### Hosted zones
+- **Domain name**: mediastreamlab.com
+- **Description**: Dominio MediaStreamLab publico
+- **Type**: Public hosted zone
 
-⚠️ Solo funciones básicas disponibles en Learner Lab (sin routing geográfico).
+### Create record
+- **Record name**: www
+- **Record type**: A – Routes traffic to an IPv4 address and some AWS resources
+- **Alias**: check
+- **Route traffic to**: 
+  - Alias to Application and Classic Load Balancer
+  - US East (N. Virginia) us-east-1
+  - mediastream-lb-ec2
+- **Routing policy**: Simple routing
+
+### NS record (Copiar DNS a proveedor de dominio)
+- **Value**:
+  - ns-85.awsdns-10.com.
+  - ns-1332.awsdns-38.org.
+  - ns-1891.awsdns-44.co.uk.
+  - ns-519.awsdns-00.net.
 
 ---
 
-## 8. Seguridad: IAM y Contenidos
-## **Seguridad de Contenidos**
-1. **IAM Role**: usar `LabRole` preconfigurado
-2. **Encriptación S3**:
-```python
-s3.upload_file(..., ExtraArgs={'ServerSideEncryption': 'AES256'})
-```
-3. **Autenticación**:
-    - Implementar JWT en backend
-    - Guardar secretos (DB, tokens) en AWS Secrets Manager
-4. **Restricciones en S3**:
-    - Aplicar políticas de bucket para acceso solo desde VPC o IP de EC2 si es necesario
+## **8. Certificate Manager**: SSL
+### Request
+- **Request a public certificate**: check
+- **Fully qualified domain name**: 
+  - mediastreamlab.com
+  - www.mediastreamlab.com
+- **DNS validation**: check
+- **RSA 2048**: check
 
 ---
 
-### **9. Monitoreo y Costos**
+## **9. Billing and Cost Management**: Monitoreo y Costos
 - **AWS Budgets**: Configurar alerta al 80% del presupuesto
 - **CloudWatch**: Monitoreo de CPU y escalado
 - **Tag Editor**: Eliminar recursos con etiquetas diarias
 
 💡 Recomendación: evitar Glacier, no disponible. Usar solo `gp2` o `gp3` en EBS y RDS.
 
+> [!WARNING] AWS Alchemy Lab no lo permite
 ---
