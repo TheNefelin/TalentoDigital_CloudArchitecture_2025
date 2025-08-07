@@ -97,7 +97,7 @@ Router Table
     - Destination: 0.0.0.0/0
     - Description: 
 
-### 2.2 artema-sg-bastion
+### 2.2 artema-sg-api
 - **Name**: artema-sg-api
 - **Description**: Acceso HTTP/HTTPS para API
 - **VPC**: artema-vpc
