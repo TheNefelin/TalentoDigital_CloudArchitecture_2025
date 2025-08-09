@@ -89,13 +89,122 @@ Este análisis permitió identificar recursos sobredimensionados y aplicar técn
 
 ---
 
-## 📬 Entregables
+## 6. 🐾 Paso a Paso
 
-- ✔️ Análisis detallado de costos y estrategias.
-- ✔️ Documentación paso a paso de alarmas y SNS.
-- ✔️ Informe de métricas y comparativa de monitoreo.
-- ✔️ Código de ejemplo con CLI.
-- ✔️ Reflexión y buenas prácticas.
+### **6.1 Security Group**:
+- **Name**: cloudopt-sg-ec2
+- **Description**: Acceso ec2
+- **VPC**: default
+- **Inbound rules**:
+  - SSH
+    - Type: SSH
+    - Protocol: TCP
+    - Port range: 22
+    - Destination type: Anywhere-IPv4
+    - Destination: 0.0.0.0/0
+    - Description: Acceso SSH
+  - HTTP
+    - Type: HTTP
+    - Protocol: TCP
+    - Port range: 80
+    - Destination type: Anywhere-IPv4
+    - Destination: 0.0.0.0/0
+    - Description: Acceso web
+  - HTTPS
+    - Type: HTTPS
+    - Protocol: TCP
+    - Port range: 443
+    - Destination type: Anywhere-IPv4
+    - Destination: 0.0.0.0/0
+    - Description: Acceso web
+- **Outbound rules**:
+  - Outbound
+    - Type: All traffic
+    - Protocol: all
+    - Port range: all
+    - Destination type: Custom
+    - Destination: 0.0.0.0/0
+    - Description: 
+
+### **6.2 - EC2**: Elastic Compute Cloud
+- **Name**: cloudopt-ec2
+- **OS Images**: Amazon Linux
+- **Amazon Machine Image**: Amazon Linux 2023 kernel-6.1 AMI
+- **Instance type**: t2.nano
+- **Key pair**: vockey (.ppk)
+- **VPC**: default
+- **Subnet**: default
+- **Auto-assign public IP**: Enable
+- **security groups**: cloudopt-sg-ec2
+- **Advanced details**:
+  - **IAM instance profile**: LabInstanceProfile
+  - **Detailed CloudWatch monitoring**: Enable
+  - **User data**:
+```bash
+#!/bin/bash
+# Actualizar sistema
+yum update -y
+
+# Instalar Apache
+yum install -y httpd
+systemctl enable httpd
+systemctl start httpd
+echo '<html><h1>EC2 Corriendo!!!</h1></html>' > /var/www/html/index.html
+
+# Instalar CloudWatch Agent
+yum install -y amazon-cloudwatch-agent
+
+# Crear archivo de configuración mínimo
+cat <<EOF > /opt/aws/amazon-cloudwatch-agent/bin/config.json
+{
+    "metrics": {
+        "append_dimensions": {
+            "InstanceId": "\${aws:InstanceId}"
+        },
+        "metrics_collected": {
+            "mem": {
+                "measurement": ["mem_used_percent"]
+            },
+            "disk": {
+                "measurement": ["used_percent"],
+                "resources": ["*"]
+            }
+        }
+    }
+}
+EOF
+
+# Iniciar CloudWatch Agent
+/opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl     -a fetch-config -m ec2     -c file:/opt/aws/amazon-cloudwatch-agent/bin/config.json -s
+
+# Nota: El envío de métricas de memoria y disco requiere permisos específicos en el IAM Role. 
+# En entornos con restricciones (como AWS Academy), solo estarán disponibles las métricas básicas de CPU, red y estado.
+```
+
+### **6.3 - SNS**: Simple Notification Service
+#### Create topic
+- **Type**: Standard
+- **Name**: cloudopt-alarm-topic
+#### Create subscription
+- **Topic ARN**: cloudopt-alarm-topic
+- **Protocol**: Email
+- **Endpoint**: email@email.cl
+
+### **6.4 - CloudWatch**: 
+#### Create alarm
+- **Select metric**: EC2
+  - Per-Instance Metrics: 
+    - CPUUtilization
+    - cloudopt-ec2
+- **Statistic**: Average
+- **Period**: 5 minutes
+- **Threshold type**: Static
+- **Lower**: 3
+- **Datapoints to alarm**: 12 out of 12
+- **Missing data treatment**: Treat missing data as missing
+- **Alarm state trigger**: In alarm
+- **Select an existing SNS topic**: cloudopt-alarm-topic
+- **Alarm name**: EC2-CPU-baja-alarm
 
 ---
 
@@ -105,3 +214,6 @@ Este análisis permitió identificar recursos sobredimensionados y aplicar técn
 - [AWS Budgets](https://aws.amazon.com/aws-cost-management/aws-budgets/)
 - [AWS CLI](https://docs.aws.amazon.com/cli/latest/reference/)
 - [AWS Trusted Advisor](https://aws.amazon.com/premiumsupport/technology/trusted-advisor/)
+- [AWS SNS](https://aws.amazon.com/sns/)
+
+---
