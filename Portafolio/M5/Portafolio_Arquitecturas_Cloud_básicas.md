@@ -1,195 +1,106 @@
-# M5 — Evaluación: Arquitecturas Cloud Básicas — Propuesta de solución
+# 📄 Proyecto: Arquitecturas Cloud Básicas – Caso Resuelto (Versión Dual)
 
-> **Autor:** (Tu nombre) **Fecha:** (Completar)
-
----
-
-## Resumen ejecutivo
-
-Se propone una arquitectura **cloud pública (AWS)**, modular y escalable que cubre los requisitos del enunciado: almacenamiento de objetos, respaldo y recuperación, escalabilidad automática, alta disponibilidad, CDN para contenido y mensajería asíncrona. La propuesta prioriza buenas prácticas de seguridad (IAM, cifrado), costes controlados (uso de lifecycle, CloudFront para reducir egress) y facilidad de operación (CloudWatch, AWS Backup).
+## 🏢 Situación Inicial
+La empresa tecnológica moderniza su infraestructura y migra servicios a la nube. El objetivo es diseñar una arquitectura cloud escalable, disponible y eficiente en costos, siguiendo buenas prácticas —y también adaptándola a las limitaciones de AWS Academy Learner Lab.
 
 ---
 
-## Arquitectura propuesta (visión general)
+## 📋 Requerimientos y Solución
 
+### 1. Almacenamiento de Objetos
+- **Ideal:** Amazon S3 (acceso completo), sin Glacier Vault, usado para archivos estáticos y respaldos.
+- **Academy:** Igual, ya que S3 está disponible en AWS Academy Learner Lab.
+
+### 2. Respaldo y Recuperación
+- **Ideal:** RDS snapshots → S3; EC2 AMI/EBS snapshots → S3 (≤ 100 GB por volumen).
+- **Academy:** Igual, cuidando de no exceder almacenamiento y presupuesto.
+
+### 3. Modelo de Nube
+- **Ideal:** Nube Pública AWS en `us-east-1` / `us-west-2`.
+- **Academy:** Igual, el entorno ofrece estas regiones.
+
+### 4. Escalabilidad y Balanceo
+- **Ideal:** Auto Scaling Group (t2.micro/t3.micro) + ALB; máx. 9 instancias/región y 32 vCPU totales.
+- **Academy:** Coincide con los límites reales del lab.
+
+### 5. Alta Disponibilidad
+- **Ideal:** 2 Zonas de Disponibilidad con ALB distribuyendo tráfico.
+- **Academy:** Igual, manteniendo bajo el número de instancias.
+
+### 6. Disponibilidad de Contenidos (CDN)
+- **Ideal:** CloudFront como CDN para distribución global.
+- **Academy:** Si CloudFront no está disponible, usar:
+  - S3 Static Website Hosting + HTTP cache control.
+  - Route 53 con TTL bajos para simular distribución.
+
+### 7. Mensajería Asíncrona y Lambda
+- **Ideal:** Amazon SQS → Lambda → Backend (desacoplamiento).
+- **Límite real AWS:** LambdaConcurrency = 1,000 ejecuciones concurrentes por región.
+- **Academy:** Igual, respetando el límite.
+
+### 8. Administración de Costos
+- AWS Cost Explorer, Trusted Advisor, tagging, instancias pequeñas, detener recursos inactivos, evitar NAT Gateway.
+
+---
+
+## 🗺️ Arquitectura Ideal (Mermaid)
 ```mermaid
-flowchart LR
-  subgraph Public
-    ALB["ALB (Application Load Balancer)"]
-    CF["CloudFront (CDN)"]
-  end
-  subgraph Private
-    ASG["Auto Scaling Group\n(EC2) / ECS Fargate opcional"]
-    App["Aplicación (EC2/ECS) "]
-    SQS["SQS (colas)"]
-    Lambda["Lambda / Consumidores"]
-  end
-  S3["S3 (Objetos) — origen estático / backups"]
-  SNS["SNS (pub/sub)"]
-
-  CF --> ALB
-  ALB --> ASG
-  ASG --> App
-  App --> S3
-  App --> SNS
-  SNS --> SQS
-  SQS --> Lambda
-  App -->|Escritura| S3
+graph TD
+  U[Usuarios] --> CF[CloudFront]
+  CF --> ALB[ALB]
+  ALB --> ASG[Auto Scaling EC2]
+  ALB --> S3[(S3)]
+  ASG --> SQS[(SQS)]
+  SQS --> Lambda[Lambda]
+  Lambda --> RDS[(RDS)]
+  Lambda --> S3
+  RDS -.Backup.-> S3
+  ASG -.AMI/EBS Snapshot.-> S3
 ```
 
-> Nota: el diagrama es de alto nivel. Para producción recomendamos multi-AZ, subredes públicas/privadas y separación de responsabilidades entre cuentas (por ejemplo: cuentas de prod/stage/infra).
+---
+
+## 🗺️ Arquitectura Adaptada (AWS Academy Learner Lab)
+```mermaid
+graph TD
+  U[Usuarios] --> S3Host[S3 Static Website Hosting]
+  S3Host --> ALB[ALB]
+  ALB --> ASG[Auto Scaling EC2]
+  ASG --> SQS[(SQS)]
+  SQS --> Lambda[Lambda]
+  Lambda --> RDS[(RDS)]
+  RDS -.Backup.-> S3
+```
+
+- Reemplazo de CloudFront por S3 Static Website Hosting (o Route 53) para cumplir con disponibilidad.
+- Se mantienen ASG, ALB, SQS, Lambda, RDS y respaldos.
 
 ---
 
-## Lección 1 — Arquitecturas de almacenamiento de objetos
-
-**Decisión**: Amazon S3 como almacenamiento de objetos principal para contenidos estáticos, artefactos y dumps. Justificación breve:
-
-- Durabilidad y disponibilidad diseñadas para datos estáticos; integración nativa con CloudFront.
-- Versionado y políticas de ciclo de vida para gestionar costes y retención.
-- Soporta cifrado en reposo (SSE-KMS) y acceso con políticas finas (IAM + bucket policies).
-
-**Componentes**: S3 (bucket principal), S3 Lifecycle (move to IA/Glacier), S3 Versioning, SSE-KMS.
-
-**Resultado esperado**: almacenamiento seguro, con políticas de retención y coste optimizado.
+## 📊 Límites Reales en AWS Academy Lab
+- **EC2:** Máx. 9 instancias por región y 32 vCPU totales.
+- **Lambda:** Concurrency por defecto de 1,000 invocaciones concurrentes por región.
+- **S3, SQS, RDS, snapshots, ALB:** Disponibles sin restricciones mayores.
 
 ---
 
-## Lección 2 — Estrategias de almacenamiento y respaldo en la nube
+## 💰 Estimación de Costos (On-Demand – Región us-east-1)
+| Componente            | Cantidad | Tipo           | Precio Unitario (USD/h) | Total (USD/mes) |
+|----------------------|----------|----------------|-------------------------|-----------------|
+| EC2 t3.micro         | 4        | On-Demand      | 0.0104                  | ~30.00          |
+| RDS t3.micro         | 1        | On-Demand      | 0.018                    | ~13.00          |
+| S3 Standard          | 50 GB    | Almacenamiento | 0.023/GB-mes            | ~1.15           |
+| CloudFront (Ideal)   | 50 GB    | Data Out       | 0.085/GB                | ~4.25           |
+| SQS Standard         | 1 cola   | 1M req incl.   | 0.40/M extra            | 0               |
+| Lambda               | 1M invoc.| Incl. 400k seg | Gratis/uso menor        | 0               |
 
-**Estrategia de backup**:
-
-1. **Datos en S3:** activar versioning + lifecycle (archivar a Glacier/Deep Archive según RPO/RTO).
-2. **EBS (volúmenes de EC2):** snapshots programados (AWS Backup o snapshot Lambda) y retención cruzada por región si se requiere DR.
-3. **Bases de datos (si aplica):** RDS con snapshots automáticos y multi-AZ; exportes regulares a S3.
-
-**Recuperación ante fallos**: pruebas regulares de restauración desde snapshots/Glacier; playbooks de recuperación documentados.
-
----
-
-## Lección 3 — Arquitecturas públicas/privadas/híbridas
-
-**Propuesta**: **Nube pública (AWS)** con opción híbrida para sistemas legacy sensibles mediante VPN/Direct Connect. Justificación:
-
-- Rapidez de despliegue, coste y servicios gestionados (S3, SNS, CloudFront, ALB).
-- Híbrido cuando hay requisitos regulatorios o latencia a sistemas on‑prem.
-
-**Integración**: VPN site-to-site o AWS Transit Gateway / Direct Connect según SLA y volumen de tráfico.
+> *Valores aproximados de AWS On-Demand para referencia; en AWS Academy Learner Lab el costo no se cobra pero el presupuesto es limitado.*
 
 ---
 
-## Lección 4 — Escalabilidad de servicios de cómputo
-
-**Mecanismo**:
-
-- **Auto Scaling Group (EC2)** con ALB para instancias clásicas.
-- **Alternativa gestionada:** ECS (Fargate) o EKS para contenedores; autoscaling por tareas/pods.
-
-**Política**: escalado basado en CPU/RAM/latencia de cola (SQS) y reglas de pre-provisión para picos.
-
-**Integración**: ALB dirige tráfico y realiza health checks a targets; ASG ajusta número de instancias.
-
----
-
-## Lección 5 — Disponibilidad de aplicaciones en la red
-
-**Mecanismos**:
-
-- Multi‑AZ (mínimo 2 AZ) para EC2/ASG.
-- ALB (distribución de carga por AZ) y Route 53 para balanceo DNS y health checks globales / failover.
-- Security Groups y NACLs para control de acceso a nivel de red.
-
-**Resultado**: tolerancia a fallos AZ y mantenimiento sin downtime (cuando se diseñe correctamente).
-
----
-
-## Lección 6 — Disponibilidad de contenidos (CDN)
-
-**Decisión**: Amazon CloudFront con S3 (o ALB) como origen.
-
-- Reduce latencia y coste de egress en tráfico público.
-- Añade seguridad (WAF, signed URLs) para proteger contenidos privados.
-
----
-
-## Lección 7 — Arquitecturas orientadas a mensajes
-
-**Patrón propuesto**: **SNS (pub/sub) → SQS (colas) → consumidores (Lambda / EC2 / ECS)**
-
-- SNS para publicar eventos (fan‑out) a múltiples suscriptores (correo, SQS, Lambda).
-- SQS para desacoplar y garantizar entrega eventual; trabajadores consumen mensajes a ritmo propio.
-
-**Beneficios**: desacoplamiento, tolerancia a picos, reintentos controlados y dead‑letter queues.
-
----
-
-## Lección 8 — Administración de costos en la nube
-
-**Herramientas y prácticas**:
-
-- AWS Cost Explorer y AWS Budgets para alarmas de gasto.
-- Etiquetado (tags) consistente para asignar coste por proyecto/ambiente.
-- Uso de lifecycle en S3, backups eficientes (snapshot incremental), reserved/spot instances para workloads no críticos.
-
----
-
-## Estimación de costos — ejemplo de referencia (pequeña PoC)
-
-> **Nota**: valores de referencia orientativos para un entorno pequeño (2 instancias t3.small, ALB, S3, CloudFront, SNS, EBS). Los precios reales dependen de región y uso. Revisa el pricing oficial antes de la entrega.
-
-**Supuestos**:
-
-- 2 × EC2 t3.small (Linux) ejecutándose 24/7 (730 h/mes).
-- ALB: 1 ALB con \~1 LCU promedio.
-- S3: 100 GB en Standard.
-- CloudFront: 200 GB transferencia saliente + 5M requests.
-- SNS: 1M publishes.
-- EBS: 2 × 30 GB gp3 root volumes.
-- Snapshots: 30 GB en snapshot.
-
-**Fuentes**: precios de referencia (usa como guía): S3, EC2, ALB, CloudFront, SNS, SQS, EBS. (Ver seccion de fuentes fuera del .md).
-
-**Cálculos** (ejemplo):
-
-1. EC2 (t3.small): precio por hora asumido = \$0.0208 USD/h (ejemplo).
-
-   - Por instancia/mes = 0.0208 × 730 = 15.184 USD.
-   - Para 2 instancias = 15.184 × 2 = **30.368 USD**.
-
-2. ALB:
-
-   - Cargo horario base = 0.0225 USD/h; + 1 LCU × 0.008 USD/h = 0.0305 USD/h.
-   - Mensual = 0.0305 × 730 = **22.265 USD**.
-
-3. S3 (100 GB): 100 × 0.023 = **2.30 USD**.
-
-4. CloudFront (200 GB + 5M reqs):
-
-   - Data: 200 × 0.085 = 17.00 USD.
-   - Requests: (5\_000\_000 / 10\_000) × 0.01 = 500 × 0.01 = 5.00 USD.
-   - Total CF = **22.00 USD**.
-
-5. SNS (1M publishes): aprox **0.30 USD** (ejemplo de referencia).
-
-6. EBS (gp3): 2 × (30 GB × 0.08) = 2 × 2.4 = **4.80 USD**.
-
-7. Snapshots (30 GB): 30 × 0.05 = **1.50 USD**.
-
-**Total mensual aproximado (PoC)** = 30.368 + 22.265 + 2.30 + 22.00 + 0.30 + 4.80 + 1.50 = **≈ 83.53 USD/mes**
-
-> **Importante**: esta es una estimación orientativa. Para una estimación real debes usar el AWS Pricing Calculator y fijar la región objetivo.
-
----
-
-## Entregables (según consigna del módulo)
-
-- Informe técnico por lección (decisiones y justificaciones).
-- Diagramas técnicos parciales por etapa.
-- Registro/estimación de costos actualizado.
-- Documento final integrador con todos los diagramas, la justificación y la estimación consolidada.
-
----
-
-## Paso a Paso (plantilla — aquí puedes pegar tus pasos exactos de consola/GUI)
-
-> Esta sección está pensada para que pegues **tus** pasos concretos (capturas/comandos) para la creación de infra en AWS. Abajo hay una plantilla con comandos AWS CLI útiles y una checklist — puedes copiar, pegar y adaptar.
+## ✅ Beneficios Clave
+- Escalabilidad automática sin superar límites del lab.
+- Alta disponibilidad multi-AZ.
+- Mensajería asíncrona para resiliencia.
+- Distribución de contenido optimizada (ideal con CDN).
+- Costos reducidos y controlados en entorno real o de laboratorio.
