@@ -194,11 +194,11 @@ ec2-user
 - **Bucket Key**: Disable
 - **Management**
     - Create lifecycle rule: 
-        - Name: artema-rds-glacier-backup
-        - Choose a rule scope: Apply to all objects in the bucket
-        - Lifecycle rule actions: Permanently delete...
-        - Days after objects become noncurrent: 7
-        - Number of newer versions to retain: 2
+        - **Name**: artema-rds-glacier-backup
+        - **Choose a rule scope**: Apply to all objects in the bucket
+        - **Lifecycle rule actions**: Permanently delete...
+        - **Days after objects become noncurrent**: 7
+        - **Number of newer versions to retain**: 2
 
 ### backet artema-s3-storage
 - **AWS Region**: us-east-1

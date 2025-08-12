@@ -29,25 +29,13 @@ curl http://localhost
 
 
 
+# Iniciar web desde s3
+
 #!/bin/bash
 yum update -y
 yum install nginx -y
 yum install awscli -y
 aws s3 sync s3://BUCKET_NAME/ /usr/share/nginx/html/
-chown -R nginx:nginx /usr/share/nginx/html/
-chmod -R 755 /usr/share/nginx/html/
-systemctl stop httpd
-systemctl disable httpd
-systemctl enable nginx
-systemctl start nginx
-
-
-
-#!/bin/bash
-yum update -y
-yum install nginx -y
-yum install awscli -y
-aws s3 sync s3://mediastream-s3-storage/ /usr/share/nginx/html/
 chown -R nginx:nginx /usr/share/nginx/html/
 chmod -R 755 /usr/share/nginx/html/
 systemctl stop httpd

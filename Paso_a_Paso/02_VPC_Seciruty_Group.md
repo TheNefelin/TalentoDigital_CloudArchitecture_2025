@@ -1,0 +1,114 @@
+# **Seciruty Group**: (reglas de seguridad)
+
+### artema-sg-bastion
+- **Name**: artema-sg-bastion
+- **Description**: Acceso para Bastion
+- **VPC**: artema-vpc
+- **Inbound rules**:
+  - SSH
+    - Type: SSH
+    - Protocol: TCP
+    - Port range: 22
+    - Destination type: Anywhere-IPv4
+    - Destination: 0.0.0.0/0 (MyIP)
+    - Description: Acceso SSH 
+  - HTTP
+    - Type: HTTP
+    - Protocol: TCP
+    - Port range: 443
+    - Destination type: Anywhere-IPv4
+    - Destination: 0.0.0.0/0
+    - Description: Acceso web    
+  - PostgreSQL
+    - Type: PostgreSQL
+    - Protocol: TCP
+    - Port range: 5432
+    - Destination type: Custom
+    - Destination: 0.0.0.0/0
+    - Description: Acceso PostgreSQL 
+- **Outbound rules**:
+  - Outbound
+    - Type: All traffic
+    - Protocol: all
+    - Port range: all
+    - Destination type: Custom
+    - Destination: 0.0.0.0/0
+    - Description:
+
+### artema-sg-rds
+- **Name**: artema-sg-rds
+- **Description**: Acceso para RDS
+- **VPC**: artema-vpc
+- **Inbound rules**:
+  - PostgreSQL
+    - Type: PostgreSQL
+    - Protocol: TCP
+    - Port range: 5432
+    - Destination type: Custom
+    - Destination: 0.0.0.0/0
+    - Description: Acceso PostgreSQL
+- **Outbound rules**:
+  - Outbound
+    - Type: All traffic
+    - Protocol: all
+    - Port range: all
+    - Destination type: Custom
+    - Destination: 0.0.0.0/0
+    - Description:
+
+## 2. Security Groups:
+### artema-sg-firewall
+- **Name**: artema-sg-firewall
+- **Description**: firewall
+- **VPC**: artema-vpc
+- **Inbound rules**:
+  - SSH
+    - Type: SSH
+    - Protocol: TCP
+    - Port range: 22
+    - Destination type: Anywhere-IPv4
+    - Destination: 0.0.0.0/0 (MyIP)
+    - Description: Acceso SSH
+  - RDP
+    - Type: RDP
+    - Protocol: TCP
+    - Port range: 3389
+    - Destination type: Anywhere-IPv4
+    - Destination: 0.0.0.0/0 (MyIP)
+    - Description: Acceso Escritorio Remoto    
+  - HTTP
+    - Type: HTTP
+    - Protocol: TCP
+    - Port range: 443
+    - Destination type: Anywhere-IPv4
+    - Destination: 0.0.0.0/0
+    - Description: Acceso web    
+  - HTTPS
+    - Type: HTTPS
+    - Protocol: TCP
+    - Port range: 443
+    - Destination type: Anywhere-IPv4
+    - Destination: 0.0.0.0/0
+    - Description: Acceso web
+  - PostgreSQL
+    - Type: PostgreSQL
+    - Protocol: TCP
+    - Port range: 5432
+    - Destination type: Custom
+    - Destination: 0.0.0.0/0
+    - Description: Acceso PostgreSQL
+  - NFS
+    - Type: PostgreSQL
+    - Protocol: TCP
+    - Port range: 2049
+    - Destination type: Custom
+    - Destination: 0.0.0.0/0
+    - Description: Acceso Carpeta Compartida 
+- **Outbound rules**:
+  - Outbound
+    - Type: All traffic
+    - Protocol: all
+    - Port range: all
+    - Destination type: Custom
+    - Destination: 0.0.0.0/0
+    - Description:
