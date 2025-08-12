@@ -1,31 +1,29 @@
-# **VPC**: Virtual Private Cloud
-
+## **VPC**: Virtual Private Cloud
 ### Configuracion
-- VPC settings: VPC and more
-- Name: artema
-- IPv4 CIDR block: 10.0.0.0/16
-- IPv6 CIDR block: No IPv6 CIDR block
-- Number of Availability Zones: 2
-- Customize AZs:
+- **VPC settings**: VPC and more
+- **Name**: artema
+- **IPv4 CIDR block**: 10.0.0.0/16
+- **IPv6 CIDR block**: No IPv6 CIDR block
+- **Number of Availability Zones**: 2
+- **Customize AZs**:
   - us-east-1a
   - us-east-1b
-  - us-east-n
-- Number of public subnets: 2
-- Number of private subnets: 2
-- Customize subnets CIDR blocks:
-  - Public subnet CIDR block in us-east-1a: 10.0.0.0/20
-  - Public subnet CIDR block in us-east-1b: 10.0.16.0/20
-  - Private subnet CIDR block in us-east-1a: 10.0.128.0/20
-  - Private subnet CIDR block in us-east-1b: 10.0.144.0/20
-- NAT gateways: In 1 AZ
-- VPC endpoints: None
-- Enable DNS hostnames: check
-- Enable DNS resolution check
+- **Number of public subnets**: 2
+- **Number of private subnets**: 2
+- **Customize subnets CIDR blocks**:
+  - **Public subnet CIDR block in us-east-1a**: 10.0.0.0/20
+  - **Public subnet CIDR block in us-east-1b**: 10.0.16.0/20
+  - **Private subnet CIDR block in us-east-1a**: 10.0.128.0/20
+  - **Private subnet CIDR block in us-east-1b**: 10.0.144.0/20
+- **NAT gateways**: In 1 AZ
+- **VPC endpoints**: S3 Gateway
+- **Enable DNS hostnames**: check
+- **Enable DNS resolution**: check
 
 ### Enrutar subredes privadas por un solo camino
-```
+```bash
 Private Route tables
-└── artema-rtb-private1-us-east-1a to rename ==> artema-rtb-private
+└── artema-rtb-private1-us-east-1a rename to ==> artema-rtb-private
     └── Subnet associations
         └── Edit subnet associations
             ├── Selected subnets
@@ -34,7 +32,7 @@ Private Route tables
             └── Save associations
 ```
 
-```
+```bash
 Public Router Table
     ├── artema-rtb-public
     │   ├── Routes

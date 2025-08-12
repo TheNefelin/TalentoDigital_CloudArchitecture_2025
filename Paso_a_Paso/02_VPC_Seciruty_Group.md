@@ -1,8 +1,8 @@
-# **Seciruty Group**: (reglas de seguridad)
+## **Seciruty Group**:
 
 ### artema-sg-bastion
 - **Name**: artema-sg-bastion
-- **Description**: Acceso para Bastion
+- **Description**: Acceso Bastion
 - **VPC**: artema-vpc
 - **Inbound rules**:
   - SSH
@@ -11,21 +11,21 @@
     - Port range: 22
     - Destination type: Anywhere-IPv4
     - Destination: 0.0.0.0/0 (MyIP)
-    - Description: Acceso SSH 
+    - Description: Acceso SSH
   - HTTP
     - Type: HTTP
     - Protocol: TCP
     - Port range: 443
     - Destination type: Anywhere-IPv4
     - Destination: 0.0.0.0/0
-    - Description: Acceso web    
+    - Description: Acceso web
   - PostgreSQL
     - Type: PostgreSQL
     - Protocol: TCP
     - Port range: 5432
     - Destination type: Custom
-    - Destination: 0.0.0.0/0
-    - Description: Acceso PostgreSQL 
+    - Destination: artema-sg-rds
+    - Description: Acceso PostgreSQL
 - **Outbound rules**:
   - Outbound
     - Type: All traffic
@@ -37,7 +37,7 @@
 
 ### artema-sg-rds
 - **Name**: artema-sg-rds
-- **Description**: Acceso para RDS
+- **Description**: Acceso RDS
 - **VPC**: artema-vpc
 - **Inbound rules**:
   - PostgreSQL
@@ -45,7 +45,7 @@
     - Protocol: TCP
     - Port range: 5432
     - Destination type: Custom
-    - Destination: 0.0.0.0/0
+    - Destination: artema-sg-bastion
     - Description: Acceso PostgreSQL
 - **Outbound rules**:
   - Outbound
@@ -54,7 +54,7 @@
     - Port range: all
     - Destination type: Custom
     - Destination: 0.0.0.0/0
-    - Description:
+    - Description: Acceso PostgreSQL
 
 ## 2. Security Groups:
 ### artema-sg-firewall

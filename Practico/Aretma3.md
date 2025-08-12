@@ -284,11 +284,11 @@ SELECT * FROM Messages;
   - **User data**
 ```bash
 #!/bin/bash
+yum update && yum upgrade -y
 yum install -y httpd
 systemctl enable httpd
 systemctl start httpd
 echo '<html><h1>EC2 Bastion Corriendo!!!</h1></html>' > /var/www/html/index.html
-yum update && yum upgrade -y
 ```
 
 ### Launch instance from template
