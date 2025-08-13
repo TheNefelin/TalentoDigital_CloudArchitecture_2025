@@ -11,7 +11,7 @@
 - **Healthy threshold**: 5
 - **Unhealthy threshold**: 2
 - **Timeout**: 5
-- **Interval**: 30
+- **Interval**: 10
 
 ### Load balancers
 - **Load balancer types**: Application Load Balancer
@@ -42,15 +42,15 @@ No VPC Lattice service
 - **Health check**:
   - **Turn on Elastic Load Balancing health checks**: check
   - **Turn on Amazon EBS health checks**: check
-- **Health check grace period**: 30
+- **Health check grace period**: 90
 - **Desired capacity** : 1
 - **Min desired capacity**: 1
 - **Max desired capacit**y: 3
 - **Choose whether to use a target tracking policy**: Target tracking scaling policy
 - **Scaling policy name**: artema-policy-web
 - **Metric type**: Average CPU utilization
-- **Target value**: 50
-- **Instance warmup**: 30
+- **Target value**: 80
+- **Instance warmup**: 90
 - **SNS Topic**: SNS Topic
 - **Event types**:
   - **Launch**: check

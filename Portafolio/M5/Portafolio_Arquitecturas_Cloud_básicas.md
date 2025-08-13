@@ -1,4 +1,4 @@
-# 📄 Proyecto: Arquitecturas Cloud Básicas – Caso Resuelto (Versión Dual)
+# 📄 Proyecto: Arquitecturas Cloud Básicas
 
 ### 🏢 Situación Inicial
 La empresa está modernizando su infraestructura y migrando servicios a la nube. Requiere diseños de arquitecturas cloud que garanticen escalabilidad, disponibilidad y eficiencia en costos, combinando modelos públicos, privados e híbridos, con balanceo de carga, escalabilidad automática y mensajería asíncrona.
@@ -31,116 +31,142 @@ Incluyendo componentes como almacenamiento, cómputo, red, mensajería y gestió
 
 ---
 
-## 📋 Paso a Paso (8 Lecciones)
+# 📋 Paso a Paso (8 Lecciones)
 
-### Leccion 1. Almacenamiento de Objetos
-- Tipos de "Storage Classes" en S3 (No confundir con "web hosting")**
-AWS S3 ofrece **6 clases de almacenamiento** para diferentes casos de uso, diferenciadas por costo/rendimiento:
+## Leccion 1. Almacenamiento de Objetos
+### Decisión técnica:
+- Se eligió Amazon S3 como servicio de almacenamiento de objetos debido a su alta disponibilidad (99.999999999%), durabilidad, integración con otros servicios de AWS y escalabilidad sin intervención manual.
 
-> Tipos de Almacenamiento en AWS S3: Elección Técnica para el Proyecto.
+### Clases de almacenamiento elegidas:
+- S3 Standard-IA para backups recientes de base de datos (acceso poco frecuente, recuperación rápida).
+- S3 Glacier Flexible Retrieval para almacenamiento a largo plazo con costo reducido y recuperación en minutos-horas.
 
-| Clase de Almacenamiento | Costo (US East, por GB/mes) | Caso de Uso Ideal | Acceso |
-|-------------------------|----------------------------|--------------------|--------|
-| **S3 Standard** | $0.023 | Datos accedidos frecuentemente (ej. imágenes de perfil, frontend web). | Milisegundos |
-| **S3 Intelligent-Tiering** | $0.023 (primeros 50TB) | Datos con patrones de acceso impredecibles. | Milisegundos |
-| **S3 Standard-IA** | $0.0125 | Datos accedidos menos frecuentemente (ej. backups mensuales). | Milisegundos |
-| **S3 One Zone-IA** | $0.01 | Datos no críticos que pueden recrearse (ej. thumbnails). | Milisegundos |
-| **S3 Glacier Instant Retrieval** | $0.004 | Archivos raramente accedidos pero que requieren acceso rápido (ej. historial médico). | Milisegundos |
-| **S3 Glacier Flexible Retrieval** | $0.0036 | Backups a largo plazo (ej. copias anuales de BD). | Minutos-horas |
-| **S3 Glacier Deep Archive** | $0.00099 | Archivos casi nunca accedidos (ej. compliance legal >7 años). | Horas |
+### Integración en la arquitectura:
+- RDS genera respaldos → S3 (Standard-IA) → Regla de ciclo de vida → Glacier Flexible Retrieval a los 30 días.
+- EC2 Web descarga archivos estáticos desde s3://artema-s3-storage/web/.
 
----
-
-### Eleccion de clase correcta para el proyecto:
+### Diagrama:
 - S3 Standard-IA
 - Glacier Flexible Retrieval
 ```mermaid
 flowchart LR
-  RDS -->|Backup automático| S3[(S3 Standard-IA)]
-  S3 -->|Lifecycle Rule| Glacier[Glacier Flexible Retrieval]
+  RDS -->|Export Backup| S3Standard[(S3 Standard-IA)]
+  S3Standard -->|Lifecycle 30d| Glacier[(S3 Glacier Flexible Retrieval)]
+  EC2Web -->|Sync Content| S3Web[(S3 Web Static)]
 ```
+
+### Costos estimados (mensual):
+| Recurso                       | Uso estimado | Precio unitario | Costo   |
+| ----------------------------- | ------------ | --------------- | ------- |
+| S3 Standard-IA                | 10 GB        | \$0.0125/GB     | \$0.125 |
+| S3 Glacier Flexible Retrieval | 50 GB        | \$0.0036/GB     | \$0.18  |
+| Requests GET/PUT              | 100k ops     | \$0.0004/1000   | \$0.04  |
 
 ---
 
-### 2. Respaldo y Recuperación
-[Precios de Amazon S3](https://aws.amazon.com/es/s3/pricing/)
+## Leccion 2. Respaldo y Recuperación
+### Mecanismo de respaldo*:
+- Snapshots automáticos de RDS en Multi-AZ.
+- Exportación manual de backups a S3 → Glacier (ciclo de vida).
 
-**Documentación técnica:**
-- Registra las limitaciones encontradas
-- Describe la solución ideal (implementable en producción)
+### Proceso de recuperación:
+1. Restaurar snapshot más reciente desde RDS.
+2. Si es necesario, recuperar archivo desde S3 Glacier (espera de minutos-horas).
+3. Importar datos a instancia RDS.
 
-**Diagrama arquitectónico:**
-
-```mermaid
-flowchart LR
-  RDS -->|Export| S3[(S3/db_backups)]
-  S3 -->|Lifecycle Rule| Glacier[(Glacier)]
-```
-
+### Diagrama:
 ```mermaid
 flowchart TD
-    A[RDS Snapshot] -->|Exportar| B[S3 Bucket]
-    B -->|Lifecycle Rule| C[Glacier]
-    D[EC2 LabRole] -->|Lectura/Escritura| B
+  A[RDS] -->|Snapshot| B[S3/Standard-IA]
+  B -->|Lifecycle| C[Glacier]
+  C -->|Restore| B
+  B -->|Import| A
 ```
 
-> [!CAUTION]
-> NO SE PUEDE POR LIMITACIONES DE AWS ACADEMY
+### Costos estimados:
+| Componente               | Uso estimado | Precio     | Costo  |
+| ------------------------ | ------------ | ---------- | ------ |
+| Snapshot RDS             | 20 GB        | \$0.095/GB | \$1.90 |
+| Transferencia S3-Glacier | 50 GB        | \$0.03/GB  | \$1.50 |
 
 ---
 
-### 3. Modelo de Nube
+## Leccion 3. Modelo de Nube
+### Modelo elegido: Nube Híbrida.
+- Parte pública: AWS (S3, EC2, RDS, SQS, ALB).
+- Parte privada (simulada): almacenamiento local para datos sensibles (ej. DB con información crítica).
 
-**A. Nube Pública (AWS)**
-- **Ventajas**:
-  - Costos iniciales bajos (pay-as-you-go)
-  - Escalabilidad automática
-  - Disponibilidad de servicios gestionados (RDS, S3)
-- **Desventajas**:
-  - Limitaciones en AWS Academy
-  - Menor control sobre infraestructura
+### Justificación:
+- Cumplimiento normativo y control de datos sensibles.
+- Aprovechar elasticidad y pago por uso de la nube pública.
+- Resiliencia y redundancia con servicios gestionados.
 
-**B. Nube Privada (Descartada)**
-- **Razones**:
-  - Alto costo de implementación
-  - Sobredimensionamiento para necesidades actuales
-
-**C. Nube Híbrida (Mejor Opción)**
-- **Propuesta**:
+### Diagrama:
 ```mermaid
 flowchart LR
-  A[App Web en AWS] --> B[(RDS Public)]
-  A --> C[(S3/Glacier)]
-  D[DB Sensible On-Prem] -->|VPN| A
+  OnPremDB[DB On-Premises] -->|VPN/IPSec| EC2Web
+  EC2Web --> RDS
+  EC2Web --> S3
+  S3 --> Glacier
 ```
-- **Justificación**:
-  - Cumplimiento de normativas (si aplica)
-  - Datos críticos en infraestructura privada
-  - Balance costo/control
 
 ---
 
-### 4. Escalabilidad y Balanceo
-- **Ideal:** Auto Scaling Group (t2.micro/t3.micro) + ALB; máx. 9 instancias/región y 32 vCPU totales.
-- **Academy:** Coincide con los límites reales del lab.
+## Leccion 4. Escalabilidad y Balanceo
+### Implementación:
+- Launch Template con Amazon Linux + Nginx que sincroniza contenido desde S3.
+- Auto Scaling Group con mínimo 1, máximo 3 instancias t2.micro.
+- Escalado basado en CPU ≥ 80%.
 
-### 5. Alta Disponibilidad
-- **Ideal:** 2 Zonas de Disponibilidad con ALB distribuyendo tráfico.
-- **Academy:** Igual, manteniendo bajo el número de instancias.
+### Ventajas:
+- Escalado automático sin intervención humana.
+- Integración con ALB para balanceo de tráfico.
 
-### 6. Disponibilidad de Contenidos (CDN)
-- **Ideal:** CloudFront como CDN para distribución global.
-- **Academy:** Si CloudFront no está disponible, usar:
-  - S3 Static Website Hosting + HTTP cache control.
-  - Route 53 con TTL bajos para simular distribución.
+---
 
-### 7. Mensajería Asíncrona y Lambda
-- **Ideal:** Amazon SQS → Lambda → Backend (desacoplamiento).
-- **Límite real AWS:** LambdaConcurrency = 1,000 ejecuciones concurrentes por región.
-- **Academy:** Igual, respetando el límite.
+## Leccion 5. Alta Disponibilidad
+### Implementación:
+- Application Load Balancer en 2 zonas de disponibilidad (us-east-1a y us-east-1b).
+- Health checks HTTP cada 10s con 5 intentos para considerar una instancia saludable.
 
-### 8. Administración de Costos
-- AWS Cost Explorer, Trusted Advisor, tagging, instancias pequeñas, detener recursos inactivos, evitar NAT Gateway.
+### Continuidad de servicio:
+- Si una AZ falla, el ALB redirige tráfico automáticamente a la otra.
+
+---
+
+## Leccion 6. Disponibilidad de Contenidos (CDN)
+### Implementación:
+- Ideal: CloudFront.
+- Restricción AWS Academy: uso de S3 Static Website Hosting + Route 53 con TTL bajos para simular distribución.
+
+### Políticas de protección:
+- Bloqueo de acceso público a buckets (solo mediante IAM Role).
+- Uso de HTTPS en ALB para contenido dinámico.
+
+---
+
+## Leccion 7. Mensajería Asíncrona y Lambda
+### Implementación:
+- Amazon SQS como cola de mensajes para desacoplar procesos (ej. subida de archivo → notificación vía SNS → procesamiento por Lambda).
+- SNS para envío de notificaciones por email en eventos de Auto Scaling (lanzamiento/terminación de instancias).
+
+### Beneficios:
+- Evita bloqueos entre servicios.
+- Escalable y tolerante a fallos.
+
+---
+
+## Leccion 8. Administración de Costos
+### Estimación mensual aproximada:
+| Servicio                   | Costo estimado |
+| -------------------------- | -------------- |
+| EC2 (t2.micro x 2)         | \$8.50         |
+| ALB                        | \$16.00        |
+| S3                         | \$0.35         |
+| Glacier                    | \$0.18         |
+| RDS (db.t3.micro Multi-AZ) | \$23.00        |
+| SQS/SNS                    | \$0.20         |
+| **Total estimado**         | **\$48.23**    |
 
 ---
 
@@ -178,7 +204,7 @@ graph TD
 
 ---
 
-# 📋 Paso a Paso (Construccion de la Infraestructura)
+# 📋 Paso a Paso (Construcción de la Infraestructura)
 
 ## 1. **VPC**: Virtual Private Cloud
 ### Configuracion
@@ -298,10 +324,13 @@ Public Router Table
 ### Estructura Optimizada del Bucket S3
 ```bash
 artema-s3-storage/
-├── web/                  # Contenido estático para EC2
-│   ├── css/              # ✅ EC2 montará este bucket via IAM Role
-│   ├── img/              # ✅ (No necesita acceso público)
-│   └── index.html        # ✅ Servido por NGINX/Apache en EC2
+├── web/                  # ✅ Contenido estático,se montará via IAM Role sin acceso público
+│   ├── css/
+│   ├── data/
+│   ├── img/
+│   ├── js/
+│   ├── error.html
+│   └── index.html
 ├── docs/                 # ✅ Documentos privados (Standard-IA)
 └── db_backups/           # ✅ Backups → Glacier (Lifecycle Rule)
 ```
@@ -440,7 +469,18 @@ VALUES
 
 ---
 
-## **5. EC2**: Elastic Compute Cloud
+# **5. SNS**: Simple Notification Service 
+### Topics
+- **Topics**: Standard
+- **Name**: artema-sns
+
+### Create subscription
+- **Topic ARN**: artema-sns
+- **Protocol**: mail@mail.cl
+
+---
+
+## **6. EC2**: Elastic Compute Cloud
 ###  Bastion
 - **Name**: artema-ec2-bastion
 - **OS Images**: Amazon Linux
@@ -478,17 +518,6 @@ echo '<html><h1>EC2 Bastion Corriendo!!!</h1></html>' > /var/www/html/index.html
 ```bash
 ec2-user
 ```
-
----
-
-# **6. SNS**: Simple Notification Service 
-### Topics
-- **Topics**: Standard
-- **Name**: artema-sns
-
-### Create subscription
-- **Topic ARN**: artema-sns
-- **Protocol**: mail@mail.cl
 
 ---
 
@@ -552,7 +581,7 @@ sudo netstat -tulnp | grep nginx
 - **Healthy threshold**: 5
 - **Unhealthy threshold**: 2
 - **Timeout**: 5
-- **Interval**: 30
+- **Interval**: 10
 
 ### Load balancers
 - **Load balancer types**: Application Load Balancer
@@ -583,15 +612,15 @@ No VPC Lattice service
 - **Health check**:
   - **Turn on Elastic Load Balancing health checks**: check
   - **Turn on Amazon EBS health checks**: check
-- **Health check grace period**: 30
+- **Health check grace period**: 90
 - **Desired capacity** : 1
 - **Min desired capacity**: 1
 - **Max desired capacit**y: 3
 - **Choose whether to use a target tracking policy**: Target tracking scaling policy
 - **Scaling policy name**: artema-policy-web
 - **Metric type**: Average CPU utilization
-- **Target value**: 50
-- **Instance warmup**: 30
+- **Target value**: 80
+- **Instance warmup**: 90
 - **SNS Topic**: SNS Topic
 - **Event types**:
   - **Launch**: check
