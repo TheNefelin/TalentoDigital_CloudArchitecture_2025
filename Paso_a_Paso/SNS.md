@@ -1,9 +1,8 @@
 # **SNS**: Simple Notification Service 
-
 ### Topics
 - **Topics**: Standard
-- **Name**: mediastream-sns
+- **Name**: artema-sns
 
 ### Create subscription
-- **Topic ARN**: mediastream-sns
+- **Topic ARN**: artema-sns
 - **Protocol**: mail@mail.cl

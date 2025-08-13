@@ -63,8 +63,13 @@ flowchart LR
 ---
 
 ### 2. Respaldo y Recuperación
-
 [Precios de Amazon S3](https://aws.amazon.com/es/s3/pricing/)
+
+**Documentación técnica:**
+- Registra las limitaciones encontradas
+- Describe la solución ideal (implementable en producción)
+
+**Diagrama arquitectónico:**
 
 ```mermaid
 flowchart LR
@@ -79,13 +84,41 @@ flowchart TD
     D[EC2 LabRole] -->|Lectura/Escritura| B
 ```
 
-> [!CAUTION] NO SE PUEDE POR LIMITACIONES DE AWS ACADEMY
+> [!CAUTION]
+> NO SE PUEDE POR LIMITACIONES DE AWS ACADEMY
 
 ---
 
 ### 3. Modelo de Nube
-- **Ideal:** Nube Pública AWS en `us-east-1` / `us-west-2`.
-- **Academy:** Igual, el entorno ofrece estas regiones.
+
+**A. Nube Pública (AWS)**
+- **Ventajas**:
+  - Costos iniciales bajos (pay-as-you-go)
+  - Escalabilidad automática
+  - Disponibilidad de servicios gestionados (RDS, S3)
+- **Desventajas**:
+  - Limitaciones en AWS Academy
+  - Menor control sobre infraestructura
+
+**B. Nube Privada (Descartada)**
+- **Razones**:
+  - Alto costo de implementación
+  - Sobredimensionamiento para necesidades actuales
+
+**C. Nube Híbrida (Mejor Opción)**
+- **Propuesta**:
+```mermaid
+flowchart LR
+  A[App Web en AWS] --> B[(RDS Public)]
+  A --> C[(S3/Glacier)]
+  D[DB Sensible On-Prem] -->|VPN| A
+```
+- **Justificación**:
+  - Cumplimiento de normativas (si aplica)
+  - Datos críticos en infraestructura privada
+  - Balance costo/control
+
+---
 
 ### 4. Escalabilidad y Balanceo
 - **Ideal:** Auto Scaling Group (t2.micro/t3.micro) + ALB; máx. 9 instancias/región y 32 vCPU totales.
@@ -213,7 +246,7 @@ Public Router Table
     - Protocol: TCP
     - Port range: 22
     - Destination type: Anywhere-IPv4
-    - Destination: 0.0.0.0/0 (MyIP)
+    - Destination: 0.0.0.0/0
     - Description: Acceso SSH 
   - HTTP
     - Type: HTTP
@@ -227,7 +260,7 @@ Public Router Table
     - Protocol: TCP
     - Port range: 5432
     - Destination type: Custom
-    - Destination: 0.0.0.0/0
+    - Destination: artema-sg-rds
     - Description: Acceso PostgreSQL 
 - **Outbound rules**:
   - Outbound
@@ -248,7 +281,7 @@ Public Router Table
     - Protocol: TCP
     - Port range: 5432
     - Destination type: Custom
-    - Destination: 0.0.0.0/0
+    - Destination: artema-sg-bastion
     - Description: Acceso PostgreSQL
 - **Outbound rules**:
   - Outbound
@@ -257,7 +290,7 @@ Public Router Table
     - Port range: all
     - Destination type: Custom
     - Destination: 0.0.0.0/0
-    - Description:
+    - Description: Acceso PostgreSQL
 
 ---
 
@@ -404,5 +437,166 @@ VALUES
     ('Chrollo Lucilfer', 'Specialist', 30, 'Líder de la banda de ladrones Fantasma.', 'chrollo.webp'),
     ('Biscuit Krueger', 'Enhancer', 30, 'Maestra experimentada con apariencia joven.', 'biscuit.webp');
 ```
+
+---
+
+## **5. EC2**: Elastic Compute Cloud
+###  Bastion
+- **Name**: artema-ec2-bastion
+- **OS Images**: Amazon Linux
+- **Amazon Machine Image**: Amazon Linux 2023 kernel-6.1 AMI
+- **Instance type**: t2.micro
+- **Key pair**: artema-key (RSA) (.ppk)
+- **VPC**: artema-vpc
+- **Subnet**: artema-subnet-public1-us-east-1a
+- **Auto-assign public IP**: Enable
+- **security groups**: artema-sg-bastion
+- **Advanced details**:
+  - **IAM instance profile**: LabInstanceProfile
+  - **User data**
+```bash
+#!/bin/bash
+yum update && yum upgrade -y
+yum install -y httpd
+systemctl enable httpd
+systemctl start httpd
+echo '<html><h1>EC2 Bastion Corriendo!!!</h1></html>' > /var/www/html/index.html
+```
+### PuTTY
+- Session
+    - HostName: BastionIP
+- Connection
+    - Seconds: 30
+    - SSH
+        - Auth
+            - Credentials
+                - Private Key: artema-key.ppk
+        - Tunnels      
+            - Source port: 5433
+            - Destination: RDS-Endpoint + : + 5432
+### Console
+```bash
+ec2-user
+```
+
+---
+
+# **6. SNS**: Simple Notification Service 
+### Topics
+- **Topics**: Standard
+- **Name**: artema-sns
+
+### Create subscription
+- **Topic ARN**: artema-sns
+- **Protocol**: mail@mail.cl
+
+---
+
+## **7. EC2**: Launch Templates
+### Launch template web
+- **Name**: artema-lt-web
+- **Description**: Plantilla base para Web
+- **OS Images**: Amazon Linux
+- **Amazon Machine Image**: Amazon Linux 2023 kernel-6.1 AMI
+- **Instance type**: t2.micro
+- **Key pair**: artema-key.ppk (RSA) (.ppk)
+- **Subnet**: Don't include in launch template
+- **Availability Zone**: Don't include in launch template
+- **security groups**: artema-sg-web
+- **Advanced network configuration**:
+  - **Auto-assign public IP**: Enable
+- **Resource tags**
+  - **Key**: Name
+  - **Value**: artema-ec2-web
+  - **Resource types**: Instances
+- **Advanced details**:
+  - **IAM instance profile**: LabInstanceProfile
+  - **User data**
+```bash
+#!/bin/bash
+yum update && yum upgrade -y
+yum install -y nginx awscli
+aws s3 sync s3://artema-s3-storage/web/ /usr/share/nginx/html/
+chown -R nginx:nginx /usr/share/nginx/html/
+chmod -R 755 /usr/share/nginx/html/
+systemctl enable nginx
+systemctl start nginx
+```
+
+- Validar funcionamiento
+```bash
+# Comprobar estado de Nginx
+systemctl status nginx
+# Probar acceso local a la web
+curl -I http://localhost
+# Verificar contenido descargado de S3
+ls -la /usr/share/nginx/html/
+# Validar AWS CLI
+aws s3 ls s3://artema-s3-storage/web/ --human-readable
+# Verificar puertos abiertos
+sudo netstat -tulnp | grep nginx
+```
+
+---
+
+## **8. Auto Scaling**:
+### Target groups
+- **target type**: Instances
+- **Name**: artema-tg-web
+- **Protocol**: HTTP
+- **Port**: 80
+- **VPC**: artema-vpc
+- **Health check protocol**: HTTP 
+- **Health check path**: /
+- **Traffic port**: check
+- **Healthy threshold**: 5
+- **Unhealthy threshold**: 2
+- **Timeout**: 5
+- **Interval**: 30
+
+### Load balancers
+- **Load balancer types**: Application Load Balancer
+- **Name**: artema-lb-web
+- **Scheme**: Internal
+- **Load balancer IP address type**: IPv4
+- **VPC**: artema-vpc
+- **us-east-1a (use1-az4)**: artema-subnet-public1-us-east-1a
+- **us-east-1b (use1-az6)**: artema-subnet-public2-us-east-1b
+- **Security groups**: artema-sg-web
+- **Protocol**: HTTP
+- **Port**: 80
+- **Default action (target group)**: artema-tg-web
+
+### Auto Scaling
+- **Name**: artema-asg
+- **Launch template**: artema-lt-web
+- **VPC**: artema-vpc
+- **Availability Zones and subnets**:
+  - artema-subnet-public1-us-east-1a 
+  - artema-subnet-public2-us-east-1b
+- **Availability Zone distribution**: Balanced best effort
+- **Load balancing**: Attach to an existing load balancer
+- **Attach to an existing load balancer**: Choose from your load balancer target groups
+- **Existing load balancer target groups**: artema-tg-web | HTTP
+- **Select VPC Lattice service to attach**: 
+No VPC Lattice service
+- **Health check**:
+  - **Turn on Elastic Load Balancing health checks**: check
+  - **Turn on Amazon EBS health checks**: check
+- **Health check grace period**: 30
+- **Desired capacity** : 1
+- **Min desired capacity**: 1
+- **Max desired capacit**y: 3
+- **Choose whether to use a target tracking policy**: Target tracking scaling policy
+- **Scaling policy name**: artema-policy-web
+- **Metric type**: Average CPU utilization
+- **Target value**: 50
+- **Instance warmup**: 30
+- **SNS Topic**: SNS Topic
+- **Event types**:
+  - **Launch**: check
+  - **Terminate**: check
+  - **Fail to launch**: check
+  - **Fail to terminate**: check      
 
 ---

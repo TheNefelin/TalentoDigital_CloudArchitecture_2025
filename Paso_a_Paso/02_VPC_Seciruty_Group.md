@@ -10,7 +10,7 @@
     - Protocol: TCP
     - Port range: 22
     - Destination type: Anywhere-IPv4
-    - Destination: 0.0.0.0/0 (MyIP)
+    - Destination: 0.0.0.0/0
     - Description: Acceso SSH
   - HTTP
     - Type: HTTP
@@ -34,6 +34,41 @@
     - Destination type: Custom
     - Destination: 0.0.0.0/0
     - Description:
+
+### artema-sg-web
+- **Name**: artema-sg-web
+- **Description**: Acceso Web
+- **VPC**: artema-vpc
+- **Inbound rules**:
+  - SSH
+    - Type: SSH
+    - Protocol: TCP
+    - Port range: 22
+    - Destination type: Anywhere-IPv4
+    - Destination: 0.0.0.0/0
+    - Description: Acceso SSH   
+  - HTTP
+    - Type: HTTP
+    - Protocol: TCP
+    - Port range: 443
+    - Destination type: Anywhere-IPv4
+    - Destination: 0.0.0.0/0
+    - Description: Acceso web    
+  - HTTPS
+    - Type: HTTPS
+    - Protocol: TCP
+    - Port range: 443
+    - Destination type: Anywhere-IPv4
+    - Destination: 0.0.0.0/0
+    - Description: Acceso web
+- **Outbound rules**:
+  - Outbound
+    - Type: All traffic
+    - Protocol: all
+    - Port range: all
+    - Destination type: Custom
+    - Destination: 0.0.0.0/0
+    - Description: Acceso PostgreSQL
 
 ### artema-sg-rds
 - **Name**: artema-sg-rds

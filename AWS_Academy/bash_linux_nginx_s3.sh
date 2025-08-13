@@ -35,10 +35,8 @@ curl http://localhost
 yum update -y
 yum install nginx -y
 yum install awscli -y
-aws s3 sync s3://BUCKET_NAME/ /usr/share/nginx/html/
+aws s3 sync s3://BUCKET_NAME/folder/ /usr/share/nginx/html/
 chown -R nginx:nginx /usr/share/nginx/html/
 chmod -R 755 /usr/share/nginx/html/
-systemctl stop httpd
-systemctl disable httpd
 systemctl enable nginx
 systemctl start nginx
