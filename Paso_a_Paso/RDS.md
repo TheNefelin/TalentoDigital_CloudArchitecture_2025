@@ -1,4 +1,3 @@
-
 ## **RDS**: Relational Database Service
 ### DRS Subnet Group
 - **Name**: artema-rds-sng
@@ -40,37 +39,37 @@
 - **Key policy**: 
 ```json
 {
-    "Version": "2012-10-17",
-    "Id": "key-export-rds",
-    "Statement": [
-        {
-            "Sid": "AllowRDSExport",
-            "Effect": "Allow",
-            "Principal": {
-                "Service": "export.rds.amazonaws.com"
-            },
-            "Action": [
-                "kms:Encrypt",
-                "kms:Decrypt",
-                "kms:GenerateDataKey"
-            ],
-            "Resource": "*",
-            "Condition": {
-                "StringEquals": {
-                    "aws:SourceAccount": "992136605746"
-                }
-            }
-        },
-        {
-            "Sid": "AllowAdmin",
-            "Effect": "Allow",
-            "Principal": {
-                "AWS": "arn:aws:iam::992136605746:root"
-            },
-            "Action": "kms:*",
-            "Resource": "*"
+  "Version": "2012-10-17",
+  "Id": "key-export-rds",
+  "Statement": [
+    {
+      "Sid": "AllowRDSExport",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "export.rds.amazonaws.com"
+      },
+      "Action": [
+        "kms:Encrypt",
+        "kms:Decrypt",
+        "kms:GenerateDataKey"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "StringEquals": {
+          "aws:SourceAccount": "992136605746"
         }
-    ]
+      }
+    },
+    {
+      "Sid": "AllowAdmin",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "arn:aws:iam::992136605746:root"
+      },
+      "Action": "kms:*",
+      "Resource": "*"
+    }
+  ]
 }
 ```
 
@@ -78,25 +77,24 @@
 - **IAM → Roles → LabRole → Trust relationships → Edit trust policy**
 ```json
 {
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Effect": "Allow",
-            "Principal": {
-                "AWS": "arn:aws:iam::992136605746:role/LabRole",
-                "Service": [
-                    "firehose.amazonaws.com",
-                    // ... (todos los servicios existentes) ...
-                    "ssm.amazonaws.com",
-                    "export.rds.amazonaws.com"  // ¡Nuevo servicio agregado!
-                ]
-            },
-            "Action": "sts:AssumeRole"
-        }
-    ]
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "arn:aws:iam::992136605746:role/LabRole",
+        "Service": [
+          "firehose.amazonaws.com",
+          // ... (todos los servicios existentes) ...
+          "ssm.amazonaws.com",
+          "export.rds.amazonaws.com"  // ¡Nuevo servicio agregado!
+        ]
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
 }
 ```
-
 
 ### Respado Manual hacia S3 (Opcional)
 #### 1. Take Snapshot

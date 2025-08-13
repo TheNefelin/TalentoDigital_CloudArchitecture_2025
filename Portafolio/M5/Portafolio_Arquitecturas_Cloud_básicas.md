@@ -153,6 +153,14 @@ flowchart LR
 ### Beneficios:
 - Evita bloqueos entre servicios.
 - Escalable y tolerante a fallos.
+```mermaid
+flowchart TD
+  A[EC2 Web] -->|Send Message| B[SQS artema-sqs-web-processing]
+  B -->|Trigger| C[Lambda Function]
+  C -->|Process & Store| D[RDS PostgreSQL]
+  C -->|Failed Messages| E[SQS DLQ]
+  C -->|Send Notification| F[SNS Topic]
+```
 
 ---
 
@@ -167,6 +175,21 @@ flowchart LR
 | RDS (db.t3.micro Multi-AZ) | \$23.00        |
 | SQS/SNS                    | \$0.20         |
 | **Total estimado**         | **\$48.23**    |
+
+```mermaid
+graph TD
+  A[EC2 Instance] -->|Send Message| B[SQS Queue]
+  B -->|Trigger| C[Lambda Function]
+  C -->|Store Data| D[RDS PostgreSQL]
+  C -->|Failed Processing| E[SQS DLQ]
+  C -->|Success Notification| F[SNS Topic]
+  F -->|Email| G[Administrator]
+  
+  H[Auto Scaling Group] -->|Events| I[SNS Topic]
+  I -->|Forward| J[SQS Queue]
+  J -->|Process| K[Lambda Notification Handler]
+  K -->|Alert| F
+```
 
 ---
 
@@ -205,6 +228,8 @@ graph TD
 ---
 
 # 📋 Paso a Paso (Construcción de la Infraestructura)
+
+<img src=".\img\Portafoio_05.drawio.png">
 
 ## 1. **VPC**: Virtual Private Cloud
 ### Configuracion
@@ -277,7 +302,7 @@ Public Router Table
   - HTTP
     - Type: HTTP
     - Protocol: TCP
-    - Port range: 443
+    - Port range: 80
     - Destination type: Anywhere-IPv4
     - Destination: 0.0.0.0/0
     - Description: Acceso web    
@@ -297,6 +322,41 @@ Public Router Table
     - Destination: 0.0.0.0/0
     - Description:
 
+### artema-sg-web
+- **Name**: artema-sg-web
+- **Description**: Acceso Web
+- **VPC**: artema-vpc
+- **Inbound rules**:
+  - SSH
+    - Type: SSH
+    - Protocol: TCP
+    - Port range: 22
+    - Destination type: Anywhere-IPv4
+    - Destination: 0.0.0.0/0
+    - Description: Acceso SSH   
+  - HTTP
+    - Type: HTTP
+    - Protocol: TCP
+    - Port range: 80
+    - Destination type: Anywhere-IPv4
+    - Destination: 0.0.0.0/0
+    - Description: Acceso web    
+  - HTTPS
+    - Type: HTTPS
+    - Protocol: TCP
+    - Port range: 443
+    - Destination type: Anywhere-IPv4
+    - Destination: 0.0.0.0/0
+    - Description: Acceso web
+- **Outbound rules**:
+  - Outbound
+    - Type: All traffic
+    - Protocol: all
+    - Port range: all
+    - Destination type: Custom
+    - Destination: 0.0.0.0/0
+    - Description: Acceso PostgreSQL
+
 ### artema-sg-rds
 - **Name**: artema-sg-rds
 - **Description**: Acceso para RDS
@@ -311,12 +371,25 @@ Public Router Table
     - Description: Acceso PostgreSQL
 - **Outbound rules**:
   - Outbound
+    - Type: PostgreSQL
+    - Protocol: TCP
+    - Port range: 5432
+    - Destination type: Custom
+    - Destination: 0.0.0.0/0
+    - Description: Acceso PostgreSQL
+
+### artema-sg-lambda
+- **Name**: artema-sg-lambda
+- **Description**: Permite trafico de salida desde Lambda
+- **VPC**: artema-vpc
+- **Outbound rules**:
+  - Outbound
     - Type: All traffic
     - Protocol: all
     - Port range: all
     - Destination type: Custom
     - Destination: 0.0.0.0/0
-    - Description: Acceso PostgreSQL
+    - Description:
 
 ---
 
@@ -627,5 +700,232 @@ No VPC Lattice service
   - **Terminate**: check
   - **Fail to launch**: check
   - **Fail to terminate**: check      
+
+---
+
+## **9. SQS: Simple Queue Service**:
+### artema-sqs-web-processing
+- **Type**: Standard
+- **Name**: artema-sqs-web-processing
+- **Visibility timeout**: 30 Seconds
+- **Message retention period**: 4 Days
+- **Delivery delay**: 0
+- **Receive message wait time**: 0
+- **Maximum message size**: 1024 KiB
+
+---
+
+## **10. Lambda Functions**:
+### Lambda SQS Processor
+- **Name**: artema-lambda-sqs-processor
+- **Runtime**: Python 3.13
+- **Architecture**: x86_64
+- **Use an existing role**: LabRole
+- **VPC**: artema-vpc
+- **Subnets**
+    - artema-subnet-private1-us-east-1a
+    - artema-subnet-private2-us-east-1b
+- **Security groups**: artema-sg-lambda
+
+###  Configuration - Environment variable
+- **RDS_ENDPOINT**: artema-pgdb.code.us-east-1.rds.amazonaws.com
+- **DB_NAME**: postgres
+- **SNS_TOPIC_ARN**: arn:aws:sns:us-east-1:account:artema-sns
+
+```python
+import json
+import boto3
+import psycopg2
+import os
+from datetime import datetime
+
+def lambda_handler(event, context):
+  # Clientes AWS
+  sns = boto3.client('sns')
+  
+  # Procesar mensajes de SQS
+  for record in event['Records']:
+    try:
+      # Parsear mensaje
+      message = json.loads(record['body'])
+      
+      # Conectar a RDS
+      conn = psycopg2.connect(
+        host=os.environ['RDS_ENDPOINT'],
+        database=os.environ['DB_NAME'],
+        user='postgres',
+        password='tu_password_aqui'  # Mejor usar AWS Secrets Manager
+      )
+      
+      # Insertar log de procesamiento
+      cur = conn.cursor()
+      cur.execute("""
+        INSERT INTO processing_logs (message_id, content, processed_at) 
+        VALUES (%s, %s, %s)
+      """, (record['messageId'], str(message), datetime.now()))
+      
+      conn.commit()
+      cur.close()
+      conn.close()
+      
+      # Enviar notificación
+      sns.publish(
+        TopicArn=os.environ['SNS_TOPIC_ARN'],
+        Subject='Mensaje Procesado',
+        Message=f'Mensaje {record["messageId"]} procesado exitosamente'
+      )
+        
+    except Exception as e:
+      print(f"Error procesando mensaje: {str(e)}")
+      # El mensaje volverá a SQS para reintento
+      raise e
+  
+  return {
+    'statusCode': 200,
+    'body': json.dumps('Mensajes procesados exitosamente')
+  }
+```
+
+---
+
+### Lambda Auto Scaling Notification Handler
+- **Name**: artema-lambda-asg-notifications
+- **Runtime**: Python 3.13
+- **Architecture**: x86_64
+- **Use an existing role**: LabRole
+- **VPC**: artema-vpc
+- **Subnets**
+    - artema-subnet-private1-us-east-1a
+    - artema-subnet-private2-us-east-1b
+- **Security groups**: artema-sg-lambda
+
+### Configuration - Triggers
+- **Trigger configuration**: 
+- **SQS queue**: 
+- **Batch size**: 1
+- **Batch window**: 0
+
+```python
+import json
+import boto3
+from datetime import datetime
+
+def lambda_handler(event, context):
+  sns = boto3.client('sns')
+  
+  for record in event['Records']:
+    # Parsear notificación de Auto Scaling
+    message = json.loads(record['body'])
+    
+    # Extraer información relevante
+    if 'AutoScalingGroupName' in str(message):
+      notification_type = message.get('Event', 'Unknown')
+      instance_id = message.get('EC2InstanceId', 'Unknown')
+      
+      # Enviar notificación personalizada
+      sns.publish(
+        TopicArn='arn:aws:sns:us-east-1:account:artema-sns',
+        Subject=f'Auto Scaling Event: {notification_type}',
+        Message=f"""
+        Evento de Auto Scaling detectado:
+        - Tipo: {notification_type}
+        - Instancia: {instance_id}
+        - Hora: {datetime.now()}
+        - Grupo: artema-asg
+        """
+      )
+  
+  return {'statusCode': 200}
+```
+
+### IAM Permissions (Anexar a LabRole o crear role específico)
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "sqs:ReceiveMessage",
+        "sqs:DeleteMessage",
+        "sqs:GetQueueAttributes"
+      ],
+      "Resource": "arn:aws:sqs:us-east-1:account:artema-sqs-*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "sns:Publish"
+      ],
+      "Resource": "arn:aws:sns:us-east-1:account:artema-sns"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "rds:DescribeDBInstances"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
+```
+
+---
+
+## **11. CloudWatch**:
+### CloudWatch - Dashboards
+- **Dashboard name**: artema-architecture-monitoring
+- **Metrics**: Line
+- **EC2 Metrics**:
+  - CPUUtilization (Average, per instance)
+  - NetworkIn/NetworkOut
+  - StatusCheckFailed  
+- **RDS Metrics**:
+  - DatabaseConnections
+  - CPUUtilization
+  - FreeStorageSpace
+- **ALB Metrics**:
+  - RequestCount
+  - TargetResponseTime
+  - HealthyHostCount
+- **Lambda Metrics**:
+  - Invocations
+  - Errors
+  - Duration
+- **SQS Metrics**:
+  - NumberOfMessagesReceived
+  - NumberOfMessagesDeleted
+  - ApproximateNumberOfVisibleMessages
+
+### CloudWatch - Alarms
+- **High CPU EC2**
+  - **Name**: artema-alarm-ec2-high-cpu
+  - **Metric**: EC2 CPUUtilization
+  - **Threshold**: > 80% for 2 consecutive periods
+  - **Action**: Send notification to SNS + Trigger Auto Scaling
+- **RDS Connection Count**
+  - **Name**: artema-alarm-rds-connections
+  - **Metric**: RDS DatabaseConnections
+  - **Threshold**: > 15 connections
+  - **Action**: Send notification to SNS
+- **SQS Message Backlog**
+  - **Name**: artema-alarm-sqs-backlog
+  - **Metric**: SQS ApproximateNumberOfVisibleMessages
+  - **Threshold**: > 10 messages for 5 minutes
+  - **Action**: Send notification to SNS
+- **Lambda Errors**
+  - **Name**: artema-alarm-lambda-errors
+  - **Metric**: Lambda Errors
+  - **Threshold**: > 3 errors in 5 minutes
+  - **Action**: Send notification to SNS
+
+### CloudWatch - Billing
+- **Static**: check
+- **Greater**: check
+- **than…**: 23 USD
+- **Alarm state trigger**: In alarm
+- **Select an existing SNS topic**: check
+- **Send a notification to…**: artema-sns
+- **Name**: artema-alarm-monthly-cost
 
 ---

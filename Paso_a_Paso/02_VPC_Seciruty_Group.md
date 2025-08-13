@@ -15,7 +15,7 @@
   - HTTP
     - Type: HTTP
     - Protocol: TCP
-    - Port range: 443
+    - Port range: 80
     - Destination type: Anywhere-IPv4
     - Destination: 0.0.0.0/0
     - Description: Acceso web
@@ -50,7 +50,7 @@
   - HTTP
     - Type: HTTP
     - Protocol: TCP
-    - Port range: 443
+    - Port range: 80
     - Destination type: Anywhere-IPv4
     - Destination: 0.0.0.0/0
     - Description: Acceso web    
@@ -84,14 +84,26 @@
     - Description: Acceso PostgreSQL
 - **Outbound rules**:
   - Outbound
+    - Type: PostgreSQL
+    - Protocol: TCP
+    - Port range: 5432
+    - Destination type: Custom
+    - Destination: 0.0.0.0/0
+    - Description: Acceso PostgreSQL
+
+### artema-sg-lambda
+- **Name**: artema-sg-lambda
+- **Description**: Permite trafico de salida desde Lambda
+- **VPC**: artema-vpc
+- **Outbound rules**:
+  - Outbound
     - Type: All traffic
     - Protocol: all
     - Port range: all
     - Destination type: Custom
     - Destination: 0.0.0.0/0
-    - Description: Acceso PostgreSQL
+    - Description:
 
-## 2. Security Groups:
 ### artema-sg-firewall
 - **Name**: artema-sg-firewall
 - **Description**: firewall
@@ -114,7 +126,7 @@
   - HTTP
     - Type: HTTP
     - Protocol: TCP
-    - Port range: 443
+    - Port range: 80
     - Destination type: Anywhere-IPv4
     - Destination: 0.0.0.0/0
     - Description: Acceso web    
