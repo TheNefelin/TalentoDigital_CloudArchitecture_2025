@@ -10,12 +10,12 @@
 
 ```mermaid
 flowchart TD
-  A[Crear Dockerfile + app (index.js, package.json)] --> B[Construir imagen Docker]
+  A[Crear Dockerfile + index.js, package.json] --> B[Construir imagen Docker]
   B --> C[Subir imagen a ECR (docker push)]
-  C --> D[Crear Task Definition en ECS con imagen y configuración (CPU, memoria, puertos)]
-  D --> E[Configurar VPC y Subnets (públicas)]
-  E --> F[Configurar Security Group (puerto 3000 abierto)]
-  F --> G[Ejecutar Task en ECS Fargate (Run Task)]
+  C --> D[Crear Task Definition en ECS con imagen y configuración CPU, memoria, puertos]
+  D --> E[Configurar VPC y Subnets públicas]
+  E --> F[Configurar Security Group, puerto 3000 abierto]
+  F --> G[Ejecutar Task en ECS Fargate - Run Task]
   G --> H[Obtener IP pública de la tarea]
   H --> I[Acceder a la app vía navegador en IP:3000]
 ```
