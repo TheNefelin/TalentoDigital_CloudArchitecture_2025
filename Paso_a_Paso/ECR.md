@@ -11,7 +11,7 @@
 ```mermaid
 flowchart TD
   A[Crear Dockerfile + index.js, package.json] --> B[Construir imagen Docker]
-  B --> C[Subir imagen a ECR (docker push)]
+  B --> C[Subir imagen a ECR - docker push]
   C --> D[Crear Task Definition en ECS con imagen y configuración CPU, memoria, puertos]
   D --> E[Configurar VPC y Subnets públicas]
   E --> F[Configurar Security Group, puerto 3000 abierto]
