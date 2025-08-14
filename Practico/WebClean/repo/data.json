@@ -1,0 +1,48 @@
+[
+  {
+    "titulo": "Principios SOLID",
+    "descripcion": "SOLID es un acrónimo de 5 principios de diseño de software que ayudan a crear sistemas más fáciles de mantener y escalar. Aplicarlos reduce la 'deuda técnica'.",
+    "conceptos_clave": ["Responsabilidad Única", "Abierto/Cerrado", "Sustitución de Liskov", "Segregación de Interfaces", "Inversión de Dependencias"],
+    "ejemplos": [
+      {
+        "nombre": "Responsabilidad Única (SRP)",
+        "explicacion": "Una clase debe tener solo una razón para cambiar. Separamos la lógica de guardar de la lógica de crear un reporte.",
+        "codigo": "class Reporte {\n    public void GenerarReporte(string datos) { ... }\n    public void GuardarReporte(string nombreArchivo) { ... }\n}\n\n// Después de aplicar SRP:\nclass GeneradorReporte {\n    public void GenerarReporte(string datos) { ... }\n}\n\nclass GuardadorReporte {\n    public void GuardarReporte(string nombreArchivo) { ... }\n}"
+      },
+      {
+        "nombre": "Abierto/Cerrado (OCP)",
+        "explicacion": "Las entidades de software deben estar abiertas para la extensión, pero cerradas para la modificación. Usamos una clase base para agregar nuevas formas sin modificar la calculadora.",
+        "codigo": "interface IAreaCalculable {\n    double CalcularArea();\n}\n\nclass Circulo : IAreaCalculable {\n    public double Radio { get; set; }\n    public double CalcularArea() { return Math.PI * Radio * Radio; }\n}\n\n// Podemos agregar Rectangulo sin modificar el código que lo usa."
+      }
+    ]
+  },
+  {
+    "titulo": "Arquitectura Clean",
+    "descripcion": "La Arquitectura Clean es un enfoque para organizar el código de manera que sea independiente de frameworks, bases de datos y la interfaz de usuario.",
+    "conceptos_clave": ["Entidades", "Casos de Uso", "Adaptadores de Interfaz", "Frameworks y Drivers"],
+    "ejemplos": [
+      {
+        "nombre": "Capas de la Arquitectura",
+        "explicacion": "El diagrama de la Arquitectura Clean muestra las capas como círculos concéntricos. Las dependencias fluyen de fuera hacia dentro.",
+        "codigo": "/*\nCapa 4: UI/DB (ASP.NET Core, EF Core)\nCapa 3: Presenters (Controllers)\nCapa 2: Use Cases\nCapa 1: Entities (Modelos de negocio)\n*/"
+      }
+    ]
+  },
+  {
+    "titulo": "Clases y Abstracción en .NET 8",
+    "descripcion": "Las clases son la base de la POO. La abstracción nos permite ocultar la complejidad y mostrar solo lo necesario, usando clases abstractas e interfaces.",
+    "conceptos_clave": ["Clases", "Constructores", "Propiedades", "Métodos", "Abstracción", "Interfaces"],
+    "ejemplos": [
+      {
+        "nombre": "Clase e Interfaz",
+        "explicacion": "Una clase es una plantilla para crear objetos, mientras que una interfaz es un 'contrato' que la clase debe cumplir.",
+        "codigo": "public interface INotificacion {\n    void Enviar(string mensaje);\n}\n\npublic class EmailService : INotificacion {\n    public void Enviar(string mensaje) {\n        // Lógica para enviar un correo\n        Console.WriteLine($\"Correo enviado: {mensaje}\");\n    }\n}\n"
+      },
+      {
+        "nombre": "Clase Abstracta",
+        "explicacion": "Una clase abstracta no se puede instanciar y se usa como base para otras clases, que deben implementar sus métodos abstractos.",
+        "codigo": "public abstract class Figura {\n    public abstract double CalcularArea();\n}\n\npublic class Circulo : Figura {\n    public double Radio { get; set; }\n    public override double CalcularArea() {\n        return Math.PI * Radio * Radio;\n    }\n}"
+      }
+    ]
+  }
+]

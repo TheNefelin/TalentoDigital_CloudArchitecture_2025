@@ -1,0 +1,51 @@
+[
+  {
+    "nombre": "Gon Freecss",
+    "tipo_nen": "Enhancer",
+    "edad": 12,
+    "descripcion": "Protagonista, con gran talento natural para el Nen.",
+    "img": "gon.webp"
+  },
+  {
+    "nombre": "Killua Zoldyck",
+    "tipo_nen": "Transmuter",
+    "edad": 12,
+    "descripcion": "Hijo de la familia asesina Zoldyck, amigo cercano de Gon.",
+    "img": "killua.webp"
+  },
+  {
+    "nombre": "Kurapika",
+    "tipo_nen": "Conjurer",
+    "edad": 17,
+    "descripcion": "Último sobreviviente del clan Kurta, busca venganza.",
+    "img": "kurapika.webp"
+  },
+  {
+    "nombre": "Leorio Paradinight",
+    "tipo_nen": "Emitter",
+    "edad": 19,
+    "descripcion": "Aspira a ser médico, es valiente y decidido.",
+    "img": "leorio.webp"
+  },
+  {
+    "nombre": "Hisoka Morow",
+    "tipo_nen": "Transmuter",
+    "edad": 28,
+    "descripcion": "Antagonista impredecible, disfruta de la pelea.",
+    "img": "hisoka.webp"
+  },
+  {
+    "nombre": "Chrollo Lucilfer",
+    "tipo_nen": "Specialist",
+    "edad": 30,
+    "descripcion": "Líder de la banda de ladrones Fantasma.",
+    "img": "chrollo.webp"
+  },
+  {
+    "nombre": "Biscuit Krueger",
+    "tipo_nen": "Enhancer",
+    "edad": 30,
+    "descripcion": "Maestra experimentada con apariencia joven.",
+    "img": "biscuit.webp"
+  }
+]
