@@ -1,12 +1,11 @@
-## **ECR**: Elastic Container Registry
-### Repositorio desde local
+# **ECR**: Elastic Container Registry
+
+## Repositorio - Node con App local a Docker de AWS
 - **Repository name**: node-app-repo
 - **Image tag mutability**: Mutable
 - **Mutable tag exclusions**:
 - **Encryption configuration**: AES-256
----
-
-### Repositorio Node con archivos local
+- **View push commands**
 
 ```mermaid
 flowchart TD
@@ -20,7 +19,7 @@ flowchart TD
   H --> I[Acceder a la app vía navegador en IP:3000]
 ```
 
-- Iniciar Sesion en AWS CLI o CloudShell web de AWS
+**Iniciar Sesion en AWS CLI o CloudShell web de AWS**
 ```bash
 aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 123456.dkr.ecr.us-east-1.amazonaws.com
 ```
@@ -132,9 +131,29 @@ docker rmi -f bb7229c9e939
 
 ---
 
-### Repositorio Node con Docker
-- Iniciar Sesion en AWS CLI o CloudShell web de AWS
+## Repositorio - Desde GitHub a Dcoker en AWS
+- **Repository name**: dotnet-app-repo
+- **Image tag mutability**: Mutable
+- **Mutable tag exclusions**:
+- **Encryption configuration**: AES-256
+- **View push commands**
+
+**Iniciar Sesion en AWS CLI o CloudShell web de AWS**
 ```bash
 aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 123456789012.dkr.ecr.us-east-1.amazonaws.com
 ```
+
+```bash
+git clone REPO_URL
+```
+
+```bash
+cd PROJECT_FOLDER
+```
+
+```bash
+docker build -t dotnet-app-repo .
+```
+
+---
 
