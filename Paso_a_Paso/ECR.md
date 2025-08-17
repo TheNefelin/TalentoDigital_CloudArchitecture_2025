@@ -90,6 +90,7 @@ docker images
 docker run -p 3000:3000 node-app-repo
 ```
 
+- Eliminar
 ```bash
 docker rmi bb7229c9e939
 docker rmi -f bb7229c9e939
@@ -157,3 +158,12 @@ docker build -t dotnet-app-repo .
 
 ---
 
+## **1. ECR**: Elastic Container Registry
+## Repositorio
+- **Repository name**: fin-tech-plus-repo
+- **Image tag mutability**: Mutable
+- **Encryption configuration**: AES-256
+
+Dentro de `fin-tech-plus-repo` obtener los comandos `View push commands` para crear la imagen docker en el repositorio.
+
+---
