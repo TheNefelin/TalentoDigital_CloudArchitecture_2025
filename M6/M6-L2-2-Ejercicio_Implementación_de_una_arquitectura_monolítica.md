@@ -1,4 +1,4 @@
-# 💼 Ejercicio de Aplicación #2: Implementación de una Arquitectura Monolítica
+# 💼 Implementación de una Arquitectura Monolítica
 
 ## 1. Desafío 🎯
 
@@ -49,15 +49,9 @@ Este ejercicio se implementa en la plataforma **AWS Academy**, que
 proporciona un entorno seguro para aprender y practicar con los
 servicios de AWS.
 
-------------------------------------------------------------------------
+---
 
-## 3. Tiempo de dedicación ⌛
-
-⏱️ **Tiempo estimado:** 1 hora.
-
-------------------------------------------------------------------------
-
-## 4. Recursos 🛠
+## 3. Recursos 🛠
 
 -   Manual: *Implementación de Servicios de Mensajería Cloud*\
 -   Documentación oficial de AWS:
@@ -66,9 +60,9 @@ servicios de AWS.
     -   [Amazon
         SNS](https://docs.aws.amazon.com/sns/latest/dg/welcome.html)
 
-------------------------------------------------------------------------
+---
 
-## 5. Plus ➕ Diagrama de Integración SQS + SNS
+## 4. Diagrama de Integración SQS + SNS
 
 ``` mermaid
 flowchart TD
@@ -79,12 +73,15 @@ flowchart TD
     D -->|Consumidor procesa mensajes| F[Servicio Interno 2]
 ```
 
-Este diagrama muestra cómo **SNS distribuye mensajes** a múltiples colas
-SQS, que a su vez son consumidas por diferentes servicios dentro de una
-arquitectura monolítica.
+---
 
-------------------------------------------------------------------------
+# 5. 🚀 Proyecto Práctico: Mensajería con SQS y SNS en AWS
 
-✅ Con este ejercicio se cubren los conceptos fundamentales de
-**mensajería en la nube** y su implementación práctica con **SQS y SNS**
-en AWS.
+### 🎯 Objetivo
+- Desplegar una aplicación Node.js 22 en Elastic Beanstalk.
+- Integrar SNS para enviar notificaciones.
+- Integrar SQS para procesar mensajes en segundo plano.
+
+## **VPC**: Virtual Private Cloud
+- VPC default
+
