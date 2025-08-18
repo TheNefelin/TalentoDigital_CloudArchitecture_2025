@@ -64,13 +64,31 @@ servicios de AWS.
 
 ## 4. Diagrama de Integración SQS + SNS
 
-``` mermaid
+```mermaid
 flowchart TD
     A[Aplicación Monolítica] -->|Publica mensaje| B[SNS - Tema]
     B -->|Notificación| C[SQS - Cola 1]
     B -->|Notificación| D[SQS - Cola 2]
     C -->|Consumidor procesa mensajes| E[Servicio Interno 1]
     D -->|Consumidor procesa mensajes| F[Servicio Interno 2]
+```
+
+```mermaid
+flowchart LR
+    A[SQS Única] --> B[Máquina 1] 
+    A --> C[Máquina 2]
+    style B stroke:#00aa00,stroke-width:4px
+    style C stroke:#ff0000,stroke-width:2px
+```
+
+```mermaid
+flowchart LR
+    D[SNS Topic] --> E[SQS-Máquina1]
+    D --> F[SQS-Máquina2]
+    E --> G[Máquina 1]
+    F --> H[Máquina 2]
+    style G stroke:#00aa00,stroke-width:4px
+    style H stroke:#00aa00,stroke-width:4px
 ```
 
 ---
