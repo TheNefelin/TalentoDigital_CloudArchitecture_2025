@@ -2,7 +2,7 @@
 - **Environment tier**: Web server environment
 - **Application name**: monolitica-eb
 - **Platform**: Node.js
-- **Platform branch**: Node.js 22 running on 64bit Amazon Linux 2023
+- **Platform branch**: Node.js 20 running on 64bit Amazon Linux 2023
 - **Platform version**: 6.6.3
 - **Upload your code**: check
 - **Version labe**: 1
