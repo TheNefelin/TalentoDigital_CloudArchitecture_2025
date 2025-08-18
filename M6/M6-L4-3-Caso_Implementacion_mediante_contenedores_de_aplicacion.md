@@ -283,7 +283,6 @@ Dentro de `fin-tech-plus-repo` obtener los comandos `View push commands` para cr
 ## **3. FinTechPlusApi**: Node + Express
 - Estructura
 ```
-
 FinTechPlusApi/
 ├── node_modules/
 ├── Dockerfile
