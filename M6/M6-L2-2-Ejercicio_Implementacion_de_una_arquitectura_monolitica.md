@@ -138,7 +138,7 @@ flowchart TD
 - **Protocol**: Amazon SQS
 - **Endpoint**: monolitica-sqs
 
-> Obtener ARN para la variable de entorno
+> Obtener ARN del Topic para la variable de entorno
 
 ---
 
@@ -168,14 +168,14 @@ flowchart TD
     - **Name**: AWS_REGION
     - **Value**: us-east-1
   - SQS
-    - **Name**: SNS_TOPIC_ARN
-    - **Value**: arn:aws:sns:us-east-1:123:monolitica-sns
-  - SNS
     - **Name**: SQS_QUEUE_URL
     - **Value**: https://sqs.us-east-1.amazonaws.com/123/monolitica-sqs
+  - SNS
+    - **Name**: SNS_TOPIC_ARN
+    - **Value**: arn:aws:sns:us-east-1:123:monolitica-sns
   - Port
     - **Name**: PORT
-    - **Value**: 80
+    - **Value**: 3000
 
 ---
 
@@ -214,6 +214,8 @@ graph TD
 - Estructura
 ```
 app-monolitica/
+├── .ebextensions/
+│   └── nginx.config
 ├── .env
 ├── package.json
 ├── package-lock.json
@@ -222,8 +224,8 @@ app-monolitica/
 - Variables de entorno
 ```env
 AWS_REGION=us-east-1
-SNS_TOPIC_ARN=arn:aws:sns:us-east-1:123456789:tu-topic
 SQS_QUEUE_URL=https://sqs.us-east-1.amazonaws.com/123456789/tu-cola
+SNS_TOPIC_ARN=arn:aws:sns:us-east-1:123456789:tu-topic
 PORT=3000
 ```
 - Inicializar package.json
@@ -232,7 +234,7 @@ npm init -y
 ```
 - Dependencias
 ```sh
-npm install express aws-sdk dotenv express-openapi-validator swagger-ui-express yamljs
+npm install express aws-sdk dotenv express-openapi-validator swagger-ui-express yamljs cors
 ```
 - Correr Servidor
 ```sh
@@ -242,6 +244,7 @@ npm start
 - server.js
 ```javascript
 const express = require('express');
+const cors = require('cors');
 const AWS = require('aws-sdk');
 const YAML = require('yamljs');
 const swaggerUi = require('swagger-ui-express');
@@ -251,6 +254,7 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 // Middleware básico
+app.use(cors());
 app.use(express.json());
 
 // Configurar Swagger
