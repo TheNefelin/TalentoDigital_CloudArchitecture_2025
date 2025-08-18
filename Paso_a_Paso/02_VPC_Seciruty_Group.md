@@ -159,3 +159,33 @@
     - Destination type: Custom
     - Destination: 0.0.0.0/0
     - Description:
+
+---
+
+### ecs-sg-fin-tech-plus
+- **Name**: ecs-sg-fin-tech-plus
+- **Description**: Acceso FinTechPlus
+- **VPC**: default
+- **Inbound rules**:
+  - SSH
+    - Type: SSH
+    - Protocol: TCP
+    - Port range: 22
+    - Destination type: Anywhere-IPv4
+    - Destination: 0.0.0.0/0
+    - Description: Acceso SSH
+  - TCP
+    - Type: Custom TCP
+    - Protocol: TCP
+    - Port range: 3000
+    - Destination type: Anywhere-IPv4
+    - Destination: 0.0.0.0/0
+    - Description: Acceso web
+- **Outbound rules**:
+  - Outbound
+    - Type: All traffic
+    - Protocol: all
+    - Port range: all
+    - Destination type: Custom
+    - Destination: 0.0.0.0/0
+    - Description:

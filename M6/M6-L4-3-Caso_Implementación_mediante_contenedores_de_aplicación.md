@@ -239,17 +239,7 @@ Este diagrama ilustra cómo la API monolítica de Node.js se ejecuta en un **Con
 
 # 🚀 Desarrollo Práctico
 
-## **1. ECR**: Elastic Container Registry
-## Repositorio
-- **Repository name**: fin-tech-plus-repo
-- **Image tag mutability**: Mutable
-- **Encryption configuration**: AES-256
-
-Dentro de `fin-tech-plus-repo` obtener los comandos `View push commands` para crear la imagen docker en el repositorio.
-
----
-
-## **Seciruty Group**:
+## **1. Seciruty Group**:
 ### ecs-sg-fin-tech-plus
 - **Name**: ecs-sg-fin-tech-plus
 - **Description**: Acceso FinTechPlus
@@ -277,6 +267,16 @@ Dentro de `fin-tech-plus-repo` obtener los comandos `View push commands` para cr
     - Destination type: Custom
     - Destination: 0.0.0.0/0
     - Description:
+
+---
+
+## **2. ECR**: Elastic Container Registry
+## Repositorio
+- **Repository name**: fin-tech-plus-repo
+- **Image tag mutability**: Mutable
+- **Encryption configuration**: AES-256
+
+Dentro de `fin-tech-plus-repo` obtener los comandos `View push commands` para crear la imagen docker en el repositorio.
 
 ---
 
@@ -440,7 +440,7 @@ WORKDIR /usr/src/app
 COPY package*.json ./
 
 # Instalar dependencias
-RUN npm install && npm cache clean --force
+RUN npm ci --only=production && npm cache clean --force
 
 # Crear usuario no privilegiado para mayor seguridad
 RUN addgroup -g 1001 -S nodejs && adduser -S fintech -u 1001
@@ -577,7 +577,7 @@ rm -rf FinTechPlusApi/
 - **Amazon EC2 instances**: uncheck
 - **Create**:
 
-#### Task label
+### ECS - Clusters - Task
 - Run new task:
   - **Task definition family**: fin-tech-plus-task
   - **Task definition revision**: last
@@ -590,5 +590,6 @@ rm -rf FinTechPlusApi/
     - public-02
     - public-03
   - **Use an existing security group**: ecs-sg-fin-tech-plus
+  - **Public IP** check
 
 ---

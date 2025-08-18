@@ -1,6 +1,6 @@
 ## **3. CloudShell**:
 ### Consola CloudShell
-- Subir el archivo comprimido `FinTechPlusApi.zip`
+- Subir el archivo comprimido
 ```sh
 ls
 ls -a
@@ -26,6 +26,21 @@ docker tag fin-tech-plus-repo:latest 123.dkr.ecr.us-east-1.amazonaws.com/fin-tec
 docker push 123.dkr.ecr.us-east-1.amazonaws.com/fin-tech-plus-repo:latest
 ```
 
+- Después del build, probar localmente
+```sh
+docker run -d -p 3000:3000 --name fintech-test fin-tech-plus-repo
+curl http://localhost:3000/health
+```
+- Verificar que la imagen se subió correctamente:
+```sh
+aws ecr describe-images --repository-name fin-tech-plus-repo
+```
+-
+```sh
+docker ps
+docker stop [CONTAINER_ID]
+```
+
 ### Limpiar CloudShell
 - Listas de imagenes
 ```sh
@@ -33,10 +48,11 @@ docker images
 ```
 - Eliminar imagen específica
 ```sh
-docker rmi [id]
+docker rmi -f [IMAGE_ID]
 ```
 - Limpieza completa de Docker
 ```sh
+docker images
 df -h
 ```
 ```sh
