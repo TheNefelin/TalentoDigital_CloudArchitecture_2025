@@ -6,8 +6,6 @@
 - **Platform version**: 6.6.3
 
 ### Servidor Node + Express
-
-
 ```sh
 npm init -y
 ```
