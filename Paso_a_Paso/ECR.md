@@ -1,6 +1,5 @@
-# **ECR**: Elastic Container Registry
-
-## Repositorio - Node con App local a Docker de AWS
+## **ECR**: Elastic Container Registry
+### Repositorio - Node con App local a Docker de AWS
 - **Repository name**: node-app-repo
 - **Image tag mutability**: Mutable
 - **Mutable tag exclusions**:
@@ -96,7 +95,9 @@ docker rmi bb7229c9e939
 docker rmi -f bb7229c9e939
 ```
 
-### ECS: Clusters con Fargate
+---
+
+## ECS: Clusters con Fargate
 - **Cluster name**: Cluster name
 - **AWS Fargate (serverless)**: check
 - **Amazon EC2 instances**: uncheck
@@ -130,8 +131,6 @@ docker rmi -f bb7229c9e939
 - **Service name**: node-app
 - **Port**: 3000
 
----
-
 ## Repositorio - Desde GitHub a Dcoker en AWS
 - **Repository name**: dotnet-app-repo
 - **Image tag mutability**: Mutable
@@ -158,8 +157,8 @@ docker build -t dotnet-app-repo .
 
 ---
 
-## **1. ECR**: Elastic Container Registry
-## Repositorio
+## **ECR**: Elastic Container Registry
+### Repositorio
 - **Repository name**: fin-tech-plus-repo
 - **Image tag mutability**: Mutable
 - **Encryption configuration**: AES-256

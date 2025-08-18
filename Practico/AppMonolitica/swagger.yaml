@@ -1,0 +1,130 @@
+openapi: 3.0.0
+info:
+  title: API de Mensajería - SQS & SNS
+  description: API simple para demostrar integración de Amazon SQS y SNS
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:3000
+    description: Servidor de desarrollo
+
+paths:
+  /:
+    get:
+      summary: Información básica de la API
+      responses:
+        '200':
+          description: Info de la API
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  endpoints:
+                    type: array
+                    items:
+                      type: string
+
+  /health:
+    get:
+      summary: Estado de la API
+      responses:
+        '200':
+          description: API funcionando
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  timestamp:
+                    type: string
+
+  /sns/publish:
+    post:
+      summary: Publicar en SNS
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - message
+              properties:
+                message:
+                  type: string
+                subject:
+                  type: string
+            example:
+              message: "Hola mundo"
+              subject: "Test"
+      responses:
+        '200':
+          description: Mensaje publicado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  messageId:
+                    type: string
+
+  /sqs/send:
+    post:
+      summary: Enviar a SQS
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - message
+              properties:
+                message:
+                  type: string
+            example:
+              message: "Mensaje para la cola"
+      responses:
+        '200':
+          description: Mensaje enviado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  messageId:
+                    type: string
+
+  /sqs/receive:
+    get:
+      summary: Recibir de SQS
+      responses:
+        '200':
+          description: Mensajes recibidos
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  messages:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        body:
+                          type: string
+                  count:
+                    type: integer
