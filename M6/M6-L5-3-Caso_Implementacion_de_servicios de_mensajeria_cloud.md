@@ -286,6 +286,47 @@ resource "aws_sqs_queue_policy" "allow_sns" {
 
 ---
 
-## Entregables incluidos
-- Reporte con análisis, diseño (diagrama Mermaid), pasos de implementación, políticas de acceso, ventajas, riesgos y mitigaciones.
-- Ejemplos de configuración (CLI/Terraform) y snippets en .NET para publicación y consumo.
+# Desarrollo Práctico
+
+## **SQS**: Simple Queue Service:
+### Queue Procesamiento interno
+- **Type**: Standard
+- **Name**: ecomexpress-sqs-process
+- **Visibility timeout**: 30 Seconds
+- **Message retention period**: 4 Days
+- **Delivery delay**: 0
+- **Receive message wait time**: 0
+- **Maximum message size**: 1024 KiB
+
+### Queue Logística/Tracking
+- **Type**: Standard
+- **Name**: ecomexpress-sqs-tracking
+- **Visibility timeout**: 30 Seconds
+- **Message retention period**: 4 Days
+- **Delivery delay**: 0
+- **Receive message wait time**: 0
+- **Maximum message size**: 1024 KiB
+
+---
+
+## **SNS**: Simple Notification Service 
+### Topics
+- **Topics**: Standard
+- **Name**: ecomexpress-sns
+
+### Create subscription
+- **Topic ARN**: ecomexpress-sns
+- **Protocol**: Amazon SQS
+- **Endpoint**: ecomexpress-sqs-process
+
+### Create subscription
+- **Topic ARN**: ecomexpress-sns
+- **Protocol**: Amazon SQS
+- **Endpoint**: ecomexpress-sqs-tracking
+
+### Create subscription
+- **Topic ARN**: ecomexpress-sns
+- **Protocol**: mail@mail.cl
+
+---
+

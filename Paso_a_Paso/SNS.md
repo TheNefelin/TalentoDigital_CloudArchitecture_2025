@@ -31,6 +31,11 @@
 - **Protocol**: Amazon SQS
 - **Endpoint**: monolitica-sqs
 
+### Create subscription
+- **Topic ARN**: monolitica-sns-clone
+- **Protocol**: Amazon SQS
+- **Endpoint**: monolitica-sqs
+
 > Obtener ARN para la variable de entorno
 
 ---
