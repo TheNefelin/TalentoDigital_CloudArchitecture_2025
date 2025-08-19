@@ -36,8 +36,8 @@ flowchart LR
     A[Servicio Pedidos] -->|Publica eventos PedidoCreado/Actualizado| T[(SNS Topic: pedidos-eventos)]
   end
 
-  T -->|Suscripción SQS (fan-out)| Q1[(SQS: cola-procesamiento-pedidos)]
-  T -->|HTTP/Email/SMS (opcional)| X[Otros canales de notificación]
+  T -->|Suscripción SQS - fan-out| Q1[(SQS: cola-procesamiento-pedidos)]
+  T -->|HTTP/Email/SMS - opcional| X[Otros canales de notificación]
   T -->|Suscripción SQS| Q2[(SQS: cola-actualizacion-logistica)]
 
   subgraph Workers
