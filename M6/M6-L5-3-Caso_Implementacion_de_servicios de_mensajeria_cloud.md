@@ -288,6 +288,42 @@ resource "aws_sqs_queue_policy" "allow_sns" {
 
 # Desarrollo Práctico
 
+## **Seciruty Group**:
+### artema-sg-bastion
+- **Name**: ecomexpress-sns-api-sg
+- **Description**: Acceso SNS Api
+- **VPC**: artema-vpc
+- **Inbound rules**:
+  - SSH
+    - Type: SSH
+    - Protocol: TCP
+    - Port range: 22
+    - Destination type: Anywhere-IPv4
+    - Destination: 0.0.0.0/0
+    - Description: Acceso SSH
+  - HTTP
+    - Type: HTTP
+    - Protocol: TCP
+    - Port range: 80
+    - Destination type: Anywhere-IPv4
+    - Destination: 0.0.0.0/0
+    - Description: Acceso web
+  - HTTPS
+    - Type: HTTPS
+    - Protocol: TCP
+    - Port range: 443
+    - Destination type: Anywhere-IPv4
+    - Destination: 0.0.0.0/0
+    - Description: Acceso web
+- **Outbound rules**:
+  - Outbound
+    - Type: All traffic
+    - Protocol: all
+    - Port range: all
+    - Destination type: Custom
+    - Destination: 0.0.0.0/0
+    - Description:
+
 ## **SQS**: Simple Queue Service:
 ### Queue Procesamiento interno
 - **Type**: Standard
@@ -330,3 +366,146 @@ resource "aws_sqs_queue_policy" "allow_sns" {
 
 ---
 
+## **ECR**: Elastic Container Registry
+### Repositorio - SNS Api
+- **Repository name**: ecomexpress-sns-api-repo
+- **Image tag mutability**: Mutable
+- **Mutable tag exclusions**:
+- **Encryption configuration**: AES-256
+- **View push commands**
+
+### Push Commands
+```sh
+aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 123.dkr.ecr.us-east-1.amazonaws.com
+```
+```sh
+docker build -t ecomexpress-sns-api-repo .
+```
+```sh
+docker tag ecomexpress-sns-api-repo:latest 123.dkr.ecr.us-east-1.amazonaws.com/ecomexpress-sns-api-repo:latest
+```
+```sh
+docker push 123.dkr.ecr.us-east-1.amazonaws.com/ecomexpress-sns-api-repo:latest
+```
+
+## **ECR**: Elastic Container Registry
+### Repositorio - SQS Worker
+- **Repository name**: ecomexpress-sqs-worker-repo
+- **Image tag mutability**: Mutable
+- **Mutable tag exclusions**:
+- **Encryption configuration**: AES-256
+- **View push commands**
+
+### Push Commands
+```sh
+aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 123.dkr.ecr.us-east-1.amazonaws.com
+```
+```sh
+docker build -t ecomexpress-sqs-worker-repo .
+```
+```sh
+docker tag ecomexpress-sqs-worker-repo:latest 123.dkr.ecr.us-east-1.amazonaws.com/ecomexpress-sqs-worker-repo:latest
+```
+```sh
+docker push 123.dkr.ecr.us-east-1.amazonaws.com/ecomexpress-sqs-worker-repo:latest
+```
+
+---
+
+## **CloudShell**:
+### Consola CloudShell
+```sh
+ls
+df -h
+```
+```sh
+git clone https://github.com/TheNefelin/AWS_ApiSNS_WorkerSQS_.NET8.git
+```
+```sh
+cd AWS_ApiSNS_WorkerSQS_.NET8
+```
+```sh
+aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 123.dkr.ecr.us-east-1.amazonaws.com
+```
+- Crear imagen docker `ecomexpress-sns-api-repo`
+```sh
+docker build -f AWS_SNS_MinimalApi/Dockerfile -t ecomexpress-sns-api-repo .
+```
+```sh
+docker tag ecomexpress-sns-api-repo:latest 123.dkr.ecr.us-east-1.amazonaws.com/ecomexpress-sns-api-repo:latest
+```
+```sh
+docker push 123.dkr.ecr.us-east-1.amazonaws.com/ecomexpress-sns-api-repo:latest
+```
+- Crear imagen docker `ecomexpress-sqs-worker-repo`
+```sh
+docker build -f AWS_SQS_Worker/Dockerfile -t ecomexpress-sqs-worker-repo .
+```
+```sh
+docker tag ecomexpress-sqs-worker-repo:latest 123.dkr.ecr.us-east-1.amazonaws.com/ecomexpress-sqs-worker-repo:latest
+```
+```sh
+docker push 123.dkr.ecr.us-east-1.amazonaws.com/ecomexpress-sqs-worker-repo:latest
+```
+- Limpieza completa de Docker 
+```sh
+docker system prune -af
+docker volume prune -f
+```
+```sh
+rm -rf AWS_ApiSNS_WorkerSQS_.NET8/
+```
+```sh
+ls
+docker images
+df -h
+```
+
+## **ECS**: Elastic Container Service
+### ECS - Clusters
+- **Cluster name**: ecomexpress-sns-api-cluster
+- **AWS Fargate (serverless)**: check
+- **Amazon EC2 instances**: uncheck
+
+### ECS - Task definitions
+- **Task definition family**: ecomexpress-sns-api-task
+- **AWS Fargate**: check
+- **Amazon EC2 instances**: unchek
+- **Operating system**: Linux/X86_64
+- **CPU**: 1vCPU
+- **Memory**: 2 GB
+- **Task role**: LabRole
+- **Task execution role**: LabRole
+- **Name**: sns-app
+- **Image URI**: ECR_IMAGE_URI
+- **Essential container**: yes
+- **Container port**: 3000
+- **Protocol**: TCP
+- **App protocol**: HTTP
+- **Environment variables**:
+  - PostgreSQL host
+    - **Key**: AWS_REGION
+    - **Value type**: Value
+    - **Value**: us-east-1
+  - PostgreSQL port
+    - **Key**: TOPIC_ARN
+    - **Value type**: Value
+    - **Value**: "arn:aws:sns:us-east-1:123:ecomexpress-sns"
+
+### ECS - Run Task
+- Run new task:
+  - **Task definition family**: ecomexpress-sns-api-task
+  - **Task definition revision**: last
+  - **Desired tasks**: 1
+  - **Existing cluster**: ecomexpress-sns-api-cluster
+  - **Capacity provider**: FARGATE
+  - **Platform version**: LATEST
+  - **VPC**: default
+  - **Subnets**:
+    - us-east-1a
+    - us-east-1b
+    - us-east-1c
+  - **Use an existing security group**: ecomexpress-sns-api-sg
+  - **Public IP** check
+
+---
