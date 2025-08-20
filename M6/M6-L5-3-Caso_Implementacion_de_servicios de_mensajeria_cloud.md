@@ -143,91 +143,109 @@ aws sns subscribe --topic-arn ARN_TOPIC --protocol sqs --notification-endpoint A
 ## 5) Anexos
 
 ### 5.1 Ejemplo .NET (C#) — Publicar evento a SNS
+- Configuracion variable de entorno
 ```csharp
-using Amazon;
-using Amazon.SimpleNotificationService;
-using Amazon.SimpleNotificationService.Model;
-using System.Text.Json;
+var region = Environment.GetEnvironmentVariable("AWS_REGION") ?? "us-east-1";
+var topicArn = Environment.GetEnvironmentVariable("SNS_TOPIC_ARN");
 
-// POCO de evento
-public record PedidoCreado(string PedidoId, DateTimeOffset OccurredAt, string ClienteId, decimal Total);
-
-public class Publisher {
-    private readonly IAmazonSimpleNotificationService _sns;
-    private readonly string _topicArn;
-
-    public Publisher(string topicArn, RegionEndpoint region) {
-        _sns = new AmazonSimpleNotificationServiceClient(region);
-        _topicArn = topicArn;
-    }
-
-    public async Task PublicarPedido(PedidoCreado evt) {
-        var message = JsonSerializer.Serialize(evt);
-        var req = new PublishRequest {
-            TopicArn = _topicArn,
-            Message = message,
-            MessageAttributes = {
-                { "eventType", new MessageAttributeValue { DataType = "String", StringValue = "PedidoCreado" } },
-                { "eventVersion", new MessageAttributeValue { DataType = "String", StringValue = "1" } }
-            }
-        };
-        await _sns.PublishAsync(req);
-    }
+if (string.IsNullOrEmpty(region) || string.IsNullOrEmpty(topicArn))
+{
+  throw new InvalidOperationException("Faltan las variables de entorno AWS_REGION o SNS_TOPIC_ARN.");
 }
+```
+- Registrar cliente SNS 
+```csharp
+builder.Services.AddSingleton<IAmazonSimpleNotificationService>(sp =>
+  new AmazonSimpleNotificationServiceClient(RegionEndpoint.GetBySystemName(region)));
+```
+- Punto de acceso para crear pedido
+```csharp
+app.MapPost("/api/pedidos", async (PedidoCreado pedido, IAmazonSimpleNotificationService sns) =>
+{
+  try
+  {
+    var json = System.Text.Json.JsonSerializer.Serialize(pedido);
+
+    await sns.PublishAsync(new PublishRequest
+    {
+      TopicArn = topicArn,
+      Message = json,
+      Subject = "Nuevo Pedido"
+    });
+
+    return Results.Ok(new { status = "Publicado en SNS", pedido.PedidoId });
+  } catch (Exception ex)
+  {
+    return Results.Problem(
+      detail: ex.Message,
+      statusCode: 500,
+      title: "Error interno en la API"
+    );
+  }
+});
+```
+- Registro para crear pedido
+```csharp
+public record PedidoCreado(Guid PedidoId, Guid ClienteId, DateTimeOffset Fecha, decimal Total);
 ```
 
 ### 5.2 Ejemplo .NET (C#) — Consumidor SQS idempotente
+- Configuracion variable de entorno
 ```csharp
-using Amazon;
-using Amazon.SQS;
-using Amazon.SQS.Model;
-using System.Text.Json;
+var region = Environment.GetEnvironmentVariable("AWS_REGION") ?? "us-east-1";
+var queueUrl = Environment.GetEnvironmentVariable("SQS_QUEUE_URL");
 
-public class SqsConsumer {
-    private readonly IAmazonSQS _sqs;
-    private readonly string _queueUrl;
-
-    public SqsConsumer(string queueUrl, RegionEndpoint region) {
-        _sqs = new AmazonSQSClient(region);
-        _queueUrl = queueUrl;
-    }
-
-    public async Task RunAsync(CancellationToken ct) {
-        while (!ct.IsCancellationRequested) {
-            var resp = await _sqs.ReceiveMessageAsync(new ReceiveMessageRequest {
-                QueueUrl = _queueUrl,
-                MaxNumberOfMessages = 10,
-                WaitTimeSeconds = 20,
-                VisibilityTimeout = 30
-            }, ct);
-
-            foreach (var msg in resp.Messages) {
-                // Idempotencia por PedidoId+Version en el cuerpo
-                try {
-                    var evt = JsonSerializer.Deserialize<PedidoCreado>(msg.Body);
-                    if (await YaProcesado(evt.PedidoId, "1")) {
-                        await _sqs.DeleteMessageAsync(_queueUrl, msg.ReceiptHandle, ct);
-                        continue;
-                    }
-
-                    await Procesar(evt);
-                    await MarcarProcesado(evt.PedidoId, "1");
-                    await _sqs.DeleteMessageAsync(_queueUrl, msg.ReceiptHandle, ct);
-                }
-                catch (Exception) {
-                    # noqa: E722
-                    // no borrar: se reintentará hasta DLQ
-                }
-            }
-        }
-    }
-
-    private Task<bool> YaProcesado(string pedidoId, string version) => Task.FromResult(false);
-    private Task MarcarProcesado(string pedidoId, string version) => Task.CompletedTask;
-    private Task Procesar(PedidoCreado evt) => Task.CompletedTask;
+if (string.IsNullOrEmpty(region) || string.IsNullOrEmpty(queueUrl))
+{
+    throw new InvalidOperationException("Faltan las variables de entorno AWS_REGION o SQS_QUEUE_URL.");
 }
+```
+- Crear cliente SQS
+```csharp
+var sqs = new AmazonSQSClient(RegionEndpoint.GetBySystemName(region));
+```
+- Iniciar loop de mensajes
+```csharp
+while (true)
+{
+  var resp = await sqs.ReceiveMessageAsync(new ReceiveMessageRequest
+  {
+    QueueUrl = queueUrl,
+    MaxNumberOfMessages = 5,
+    WaitTimeSeconds = 20,   // long polling
+    VisibilityTimeout = 30
+  });
 
-public record PedidoCreado(string PedidoId, DateTimeOffset OccurredAt, string ClienteId, decimal Total);
+  foreach (var msg in resp.Messages)
+  {
+    try
+    {
+      // 1️⃣ Deserializar el sobre SNS
+      var envelope = JsonSerializer.Deserialize<SnsEnvelope>(msg.Body);
+
+      if (envelope?.Message == null)
+      {
+        Console.WriteLine("⚠️ Mensaje inválido o vacío en SNS.");
+        continue;
+      }
+
+      // 2️⃣ Deserializar el JSON real dentro de "Message"
+      var pedido = JsonSerializer.Deserialize<PedidoCreado>(envelope.Message);
+
+      Console.WriteLine($"✅ Procesando pedido {pedido.PedidoId} de cliente {pedido.ClienteId}, total: {pedido.Total}");
+
+      // 3️⃣ Procesar (guardar en DB, llamar servicio, etc.)
+
+      // 4️⃣ Borrar el mensaje
+      await sqs.DeleteMessageAsync(queueUrl, msg.ReceiptHandle);
+    }
+    catch (Exception ex)
+    {
+      Console.WriteLine($"❌ Error procesando: {ex.Message}");
+      // No borrar → SQS reintentará o DLQ
+    }
+  }
+}
 ```
 
 ### 5.3 Terraform (opcional) — SQS + SNS + suscripción
@@ -289,10 +307,10 @@ resource "aws_sqs_queue_policy" "allow_sns" {
 # Desarrollo Práctico
 
 ## **Seciruty Group**:
-### artema-sg-bastion
-- **Name**: ecomexpress-sns-api-sg
-- **Description**: Acceso SNS Api
-- **VPC**: artema-vpc
+### ecomexpress-sns-api-sg
+- **Name**: ecomexpress-sg-sns-api
+- **Description**: Acceso SNS and API
+- **VPC**: default
 - **Inbound rules**:
   - SSH
     - Type: SSH
@@ -324,10 +342,38 @@ resource "aws_sqs_queue_policy" "allow_sns" {
     - Destination: 0.0.0.0/0
     - Description:
 
+### ecomexpress-sg-sqs-worker
+- **Name**: ecomexpress-sg-sqs-worker
+- **Description**: Acceso SQS Worker
+- **VPC**: default
+- **Inbound rules**:
+  - SSH
+    - Type: SSH
+    - Protocol: TCP
+    - Port range: 22
+    - Destination type: Anywhere-IPv4
+    - Destination: 0.0.0.0/0
+    - Description: Acceso SSH
+  - HTTP
+    - Type: HTTP
+    - Protocol: TCP
+    - Port range: 80
+    - Destination type: Anywhere-IPv4
+    - Destination: 0.0.0.0/0
+    - Description: Acceso web    
+- **Outbound rules**:
+  - Outbound
+    - Type: All traffic
+    - Protocol: all
+    - Port range: all
+    - Destination type: Custom
+    - Destination: 0.0.0.0/0
+    - Description:
+
 ## **SQS**: Simple Queue Service:
-### Queue Procesamiento interno
+### Queue Procesamiento de Pedidos
 - **Type**: Standard
-- **Name**: ecomexpress-sqs-process
+- **Name**: ecomexpress-sqs-orders-process
 - **Visibility timeout**: 30 Seconds
 - **Message retention period**: 4 Days
 - **Delivery delay**: 0
@@ -336,7 +382,7 @@ resource "aws_sqs_queue_policy" "allow_sns" {
 
 ### Queue Logística/Tracking
 - **Type**: Standard
-- **Name**: ecomexpress-sqs-tracking
+- **Name**: ecomexpress-sqs-logistics
 - **Visibility timeout**: 30 Seconds
 - **Message retention period**: 4 Days
 - **Delivery delay**: 0
@@ -348,22 +394,117 @@ resource "aws_sqs_queue_policy" "allow_sns" {
 ## **SNS**: Simple Notification Service 
 ### Topics
 - **Topics**: Standard
-- **Name**: ecomexpress-sns
+- **Name**: ecomexpress-sns-orders-events
 
 ### Create subscription
 - **Topic ARN**: ecomexpress-sns
 - **Protocol**: Amazon SQS
-- **Endpoint**: ecomexpress-sqs-process
+- **Endpoint**: ecomexpress-sqs-orders-process
 
 ### Create subscription
 - **Topic ARN**: ecomexpress-sns
 - **Protocol**: Amazon SQS
-- **Endpoint**: ecomexpress-sqs-tracking
+- **Endpoint**: ecomexpress-sqs-logistics
 
 ### Create subscription
 - **Topic ARN**: ecomexpress-sns
 - **Protocol**: mail@mail.cl
 
+---
+
+## **EB**: Elastic Beanstalk
+### SNS Web Api
+- **Environment tier**: Web server environment
+- **Application name**: ecomexpress-eb-sns-api
+- **Platform**: .NET Core on Linux
+- **Platform branch**: .NET 8 running on 64bit Amazon Linux 2023
+- **Platform version**: 3.5.3
+- **Upload your code**: check
+- **Version labe**: 1
+- **Local file**: AWS_SNS_MinimalApi.zip
+- **Single instance**: check
+- **Service role**: LabRole
+- **EC2 instance profile**: LabInstanceProfile
+- **EC2 key pair**: vockey
+- **VPC**: default
+- **Public IP address**: Enable
+- **Instance subnets**:
+  - us-east-1a
+  - us-east-1b
+- **EC2 security groups**: ecomexpress-sg-sns-api
+- **Health reporting**: Basic
+- **Managed updates**: uncheck
+- **Environment properties**:
+  - Region
+    - **Name**: AWS_REGION
+    - **Value**: us-east-1
+  - SNS
+    - **Name**: SNS_TOPIC_ARN
+    - **Value**: arn:aws:sns:us-east-1:123:ecomexpress-sns-orders-events
+
+### SQS Worker App (Queue Procesamiento de Pedidos)
+- **Environment tier**: Web server environment
+- **Application name**: ecomexpress-eb-sqs-worker-process
+- **Platform**: .NET Core on Linux
+- **Platform branch**: .NET 8 running on 64bit Amazon Linux 2023
+- **Platform version**: 3.5.3
+- **Upload your code**: check
+- **Version labe**: 1
+- **Local file**: AWS_SQS_Worker.zip
+- **Single instance**: check
+- **Service role**: LabRole
+- **EC2 instance profile**: LabInstanceProfile
+- **EC2 key pair**: vockey
+- **VPC**: default
+- **Public IP address**: Enable
+- **Instance subnets**:
+  - us-east-1a
+  - us-east-1b
+- **EC2 security groups**: ecomexpress-sg-sqs-worker
+- **Health reporting**: Basic
+- **Managed updates**: uncheck
+- **Environment properties**:
+  - Region
+    - **Name**: AWS_REGION
+    - **Value**: us-east-1
+  - SNS
+    - **Name**: SQS_QUEUE_URL
+    - **Value**: https://sqs.us-east-1.amazonaws.com/123/ecomexpress-sqs-orders-process
+
+### SQS Worker App (Queue Logística/Tracking)
+- **Environment tier**: Web server environment
+- **Application name**: ecomexpress-eb-sqs-worker-logistics
+- **Platform**: .NET Core on Linux
+- **Platform branch**: .NET 8 running on 64bit Amazon Linux 2023
+- **Platform version**: 3.5.3
+- **Upload your code**: check
+- **Version labe**: 1
+- **Local file**: AWS_SQS_Worker.zip
+- **Single instance**: check
+- **Service role**: LabRole
+- **EC2 instance profile**: LabInstanceProfile
+- **EC2 key pair**: vockey
+- **VPC**: default
+- **Public IP address**: Enable
+- **Instance subnets**:
+  - us-east-1a
+  - us-east-1b
+- **EC2 security groups**: ecomexpress-sg-sqs-worker
+- **Health reporting**: Basic
+- **Managed updates**: uncheck
+- **Environment properties**:
+  - Region
+    - **Name**: AWS_REGION
+    - **Value**: us-east-1
+  - SNS
+    - **Name**: SQS_QUEUE_URL
+    - **Value**: https://sqs.us-east-1.amazonaws.com/123/ecomexpress-sqs-logistics
+
+---
+
+---
+---
+---
 ---
 
 ## **ECR**: Elastic Container Registry
