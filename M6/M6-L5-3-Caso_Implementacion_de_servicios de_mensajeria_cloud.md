@@ -446,7 +446,7 @@ resource "aws_sqs_queue_policy" "allow_sns" {
 
 ### SQS Worker App (Queue Procesamiento de Pedidos)
 - **Environment tier**: Web server environment
-- **Application name**: ecomexpress-eb-sqs-worker-process
+- **Application name**: ecomexpress-eb-sqs-worker
 - **Platform**: .NET Core on Linux
 - **Platform branch**: .NET 8 running on 64bit Amazon Linux 2023
 - **Platform version**: 3.5.3
@@ -501,6 +501,13 @@ resource "aws_sqs_queue_policy" "allow_sns" {
   - SNS
     - **Name**: SQS_QUEUE_URL
     - **Value**: https://sqs.us-east-1.amazonaws.com/123/ecomexpress-sqs-logistics
+
+### Monitorear SQS consola SSH
+```sh
+tail -f /var/log/web.stdout.log
+tail -f /var/log/web.stderr.log
+tail -f /var/log/eb-engine.log
+```
 
 ---
 
@@ -572,16 +579,6 @@ docker tag ecomexpress-sns-api-repo:latest 123.dkr.ecr.us-east-1.amazonaws.com/e
 ```sh
 docker push 123.dkr.ecr.us-east-1.amazonaws.com/ecomexpress-sns-api-repo:latest
 ```
-- Crear imagen docker `ecomexpress-sqs-worker-repo`
-```sh
-docker build -f AWS_SQS_Worker/Dockerfile -t ecomexpress-sqs-worker-repo .
-```
-```sh
-docker tag ecomexpress-sqs-worker-repo:latest 123.dkr.ecr.us-east-1.amazonaws.com/ecomexpress-sqs-worker-repo:latest
-```
-```sh
-docker push 123.dkr.ecr.us-east-1.amazonaws.com/ecomexpress-sqs-worker-repo:latest
-```
 - Limpieza completa de Docker 
 ```sh
 docker system prune -af
@@ -614,7 +611,7 @@ df -h
 - **Name**: sns-app-dotnet
 - **Image URI**: 123.dkr.ecr.us-east-1.amazonaws.com/ecomexpress-sns-api-repo
 - **Essential container**: yes
-- **Container port**: 3000
+- **Container port**: 8080
 - **Protocol**: TCP
 - **App protocol**: HTTP
 - **Environment variables**:
@@ -641,47 +638,6 @@ df -h
     - us-east-1a
     - us-east-1b
   - **Use an existing security group**: ecomexpress-sg-sns-api
-  - **Public IP** check
-
-### ECS - Task definitions
-- **Task definition family**: ecomexpress-sqs-worker-task
-- **AWS Fargate**: check
-- **Amazon EC2 instances**: unchek
-- **Operating system**: Linux/X86_64
-- **CPU**: 1vCPU
-- **Memory**: 2 GB
-- **Task role**: LabRole
-- **Task execution role**: LabRole
-- **Name**: sqs-app-dotnet
-- **Image URI**: 123.dkr.ecr.us-east-1.amazonaws.com/ecomexpress-sqs-worker-repo
-- **Essential container**: yes
-- **Container port**: 80
-- **Protocol**: TCP
-- **App protocol**: HTTP
-- **Environment variables**:
-  - Region
-    - **Name**: AWS_REGION
-    - **Value type**: Value    
-    - **Value**: us-east-1
-  - SNS
-    - **Name**: SQS_QUEUE_URL
-    - **Value type**: Value    
-    - **Value**: https://sqs.us-east-1.amazonaws.com/123/ecomexpress-sqs-logistics
-
-
-### ECS - Run Task
-- Run new task:
-  - **Task definition family**: ecomexpress-sqs-worker-task
-  - **Task definition revision**: last
-  - **Desired tasks**: 1
-  - **Existing cluster**: ecomexpress-cluster
-  - **Capacity provider**: FARGATE
-  - **Platform version**: LATEST
-  - **VPC**: default
-  - **Subnets**:
-    - us-east-1a
-    - us-east-1b
-  - **Use an existing security group**:  ecomexpress-sg-sqs-worker
   - **Public IP** check
 
 ---

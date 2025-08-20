@@ -1,4 +1,4 @@
-## **3. CloudShell**:
+## **CloudShell**:
 ### Consola CloudShell
 - Subir el archivo comprimido
 ```sh
