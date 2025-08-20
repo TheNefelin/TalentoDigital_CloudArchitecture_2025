@@ -370,6 +370,8 @@ resource "aws_sqs_queue_policy" "allow_sns" {
     - Destination: 0.0.0.0/0
     - Description:
 
+---
+
 ## **SQS**: Simple Queue Service:
 ### Queue Procesamiento de Pedidos
 - **Type**: Standard
@@ -502,11 +504,6 @@ resource "aws_sqs_queue_policy" "allow_sns" {
 
 ---
 
----
----
----
----
-
 ## **ECR**: Elastic Container Registry
 ### Repositorio - SNS Api
 - **Repository name**: ecomexpress-sns-api-repo
@@ -514,8 +511,7 @@ resource "aws_sqs_queue_policy" "allow_sns" {
 - **Mutable tag exclusions**:
 - **Encryption configuration**: AES-256
 - **View push commands**
-
-### Push Commands
+- **Push Commands**:
 ```sh
 aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 123.dkr.ecr.us-east-1.amazonaws.com
 ```
@@ -529,15 +525,13 @@ docker tag ecomexpress-sns-api-repo:latest 123.dkr.ecr.us-east-1.amazonaws.com/e
 docker push 123.dkr.ecr.us-east-1.amazonaws.com/ecomexpress-sns-api-repo:latest
 ```
 
-## **ECR**: Elastic Container Registry
 ### Repositorio - SQS Worker
 - **Repository name**: ecomexpress-sqs-worker-repo
 - **Image tag mutability**: Mutable
 - **Mutable tag exclusions**:
 - **Encryption configuration**: AES-256
 - **View push commands**
-
-### Push Commands
+- **Push Commands**:
 ```sh
 aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 123.dkr.ecr.us-east-1.amazonaws.com
 ```
@@ -604,7 +598,7 @@ df -h
 
 ## **ECS**: Elastic Container Service
 ### ECS - Clusters
-- **Cluster name**: ecomexpress-sns-api-cluster
+- **Cluster name**: ecomexpress-cluster
 - **AWS Fargate (serverless)**: check
 - **Amazon EC2 instances**: uncheck
 
@@ -617,36 +611,77 @@ df -h
 - **Memory**: 2 GB
 - **Task role**: LabRole
 - **Task execution role**: LabRole
-- **Name**: sns-app
-- **Image URI**: ECR_IMAGE_URI
+- **Name**: sns-app-dotnet
+- **Image URI**: 123.dkr.ecr.us-east-1.amazonaws.com/ecomexpress-sns-api-repo
 - **Essential container**: yes
 - **Container port**: 3000
 - **Protocol**: TCP
 - **App protocol**: HTTP
 - **Environment variables**:
-  - PostgreSQL host
-    - **Key**: AWS_REGION
-    - **Value type**: Value
+  - Region
+    - **Name**: AWS_REGION
+    - **Value type**: Value    
     - **Value**: us-east-1
-  - PostgreSQL port
-    - **Key**: TOPIC_ARN
-    - **Value type**: Value
-    - **Value**: "arn:aws:sns:us-east-1:123:ecomexpress-sns"
+  - SNS
+    - **Name**: SNS_TOPIC_ARN
+    - **Value type**: Value    
+    - **Value**: arn:aws:sns:us-east-1:123:ecomexpress-sns-orders-events
+
 
 ### ECS - Run Task
 - Run new task:
   - **Task definition family**: ecomexpress-sns-api-task
   - **Task definition revision**: last
   - **Desired tasks**: 1
-  - **Existing cluster**: ecomexpress-sns-api-cluster
+  - **Existing cluster**: ecomexpress-cluster
   - **Capacity provider**: FARGATE
   - **Platform version**: LATEST
   - **VPC**: default
   - **Subnets**:
     - us-east-1a
     - us-east-1b
-    - us-east-1c
-  - **Use an existing security group**: ecomexpress-sns-api-sg
+  - **Use an existing security group**: ecomexpress-sg-sns-api
+  - **Public IP** check
+
+### ECS - Task definitions
+- **Task definition family**: ecomexpress-sqs-worker-task
+- **AWS Fargate**: check
+- **Amazon EC2 instances**: unchek
+- **Operating system**: Linux/X86_64
+- **CPU**: 1vCPU
+- **Memory**: 2 GB
+- **Task role**: LabRole
+- **Task execution role**: LabRole
+- **Name**: sqs-app-dotnet
+- **Image URI**: 123.dkr.ecr.us-east-1.amazonaws.com/ecomexpress-sqs-worker-repo
+- **Essential container**: yes
+- **Container port**: 80
+- **Protocol**: TCP
+- **App protocol**: HTTP
+- **Environment variables**:
+  - Region
+    - **Name**: AWS_REGION
+    - **Value type**: Value    
+    - **Value**: us-east-1
+  - SNS
+    - **Name**: SQS_QUEUE_URL
+    - **Value type**: Value    
+    - **Value**: https://sqs.us-east-1.amazonaws.com/123/ecomexpress-sqs-logistics
+
+
+### ECS - Run Task
+- Run new task:
+  - **Task definition family**: ecomexpress-sqs-worker-task
+  - **Task definition revision**: last
+  - **Desired tasks**: 1
+  - **Existing cluster**: ecomexpress-cluster
+  - **Capacity provider**: FARGATE
+  - **Platform version**: LATEST
+  - **VPC**: default
+  - **Subnets**:
+    - us-east-1a
+    - us-east-1b
+  - **Use an existing security group**:  ecomexpress-sg-sqs-worker
   - **Public IP** check
 
 ---
