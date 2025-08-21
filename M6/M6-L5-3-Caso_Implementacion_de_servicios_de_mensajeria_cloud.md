@@ -309,7 +309,7 @@ resource "aws_sqs_queue_policy" "allow_sns" {
 ## **Seciruty Group**:
 ### ecomexpress-sns-api-sg
 - **Name**: ecomexpress-sg-sns-api
-- **Description**: Acceso SNS and API
+- **Description**: Acceso SNS y API
 - **VPC**: default
 - **Inbound rules**:
   - SSH
@@ -320,16 +320,9 @@ resource "aws_sqs_queue_policy" "allow_sns" {
     - Destination: 0.0.0.0/0
     - Description: Acceso SSH
   - HTTP
-    - Type: HTTP
+    - Type: Custom TCP
     - Protocol: TCP
-    - Port range: 80
-    - Destination type: Anywhere-IPv4
-    - Destination: 0.0.0.0/0
-    - Description: Acceso web
-  - HTTPS
-    - Type: HTTPS
-    - Protocol: TCP
-    - Port range: 443
+    - Port range: 8080
     - Destination type: Anywhere-IPv4
     - Destination: 0.0.0.0/0
     - Description: Acceso web
