@@ -145,6 +145,8 @@ Usuario -> (POST Pedido) -> Monolito .NET (EC2 + Docker)
                           +--> Notificación email (factura) 
 ```
 
+<img src=".\img\Diag_01.png">
+
 ---
 
 ## **Seciruty Group**:
