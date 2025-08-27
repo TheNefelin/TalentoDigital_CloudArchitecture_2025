@@ -145,6 +145,21 @@ Usuario -> (POST Pedido) -> Monolito .NET (EC2 + Docker)
                           +--> Notificación email (factura) 
 ```
 
+```
+Usuario -> WEB API
+    |
+    |---> GET /companies (RDS)
+    |---> GET /products (RDS)
+    |---> POST /subscribe (SNS con filtro para emails)
+    |---> POST /unsubscribe (SNS con filtro para emails)
+    |---> POST /donate
+    |       |
+    |       +--> SNS con atributo: target = "email_especifico"
+    |---> POST /notification
+            |
+            +--> SNS con atributo: target = "all"
+```
+
 <img src=".\img\Diag_01.png">
 
 ---
@@ -311,6 +326,25 @@ SELECT * FROM Products;
 - **Endpoint**: monolito-sqs-worker
 
 > Obtener ARN para la variable de entorno
+
+- Subscription filter policy (email)
+```json
+{
+ "action": [
+    "process",
+    "generate_pdf"
+ ]
+}
+```
+- Subscription filter policy (worker)
+```json
+{
+  "target": [
+    "test@email.com",
+    "all"
+  ]
+}
+```
 
 ---
 

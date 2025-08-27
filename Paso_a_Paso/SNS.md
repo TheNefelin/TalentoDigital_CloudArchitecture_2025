@@ -39,3 +39,34 @@
 > Obtener ARN para la variable de entorno
 
 ---
+
+## **SNS**: Simple Notification Service 
+### Topics
+- **Topics**: Standard
+- **Name**: monolito-sns-webapi
+
+### Create subscription
+- **Topic ARN**: monolito-sns-webapi
+- **Protocol**: Amazon SQS
+- **Endpoint**: monolito-sqs-worker
+
+> Obtener ARN para la variable de entorno
+
+- Subscription filter policy (email)
+```json
+{
+ "action": [
+    "process",
+    "generate_pdf"
+ ]
+}
+```
+- Subscription filter policy (worker)
+```json
+{
+  "target": [
+    "test@email.com",
+    "all"
+  ]
+}
+```
