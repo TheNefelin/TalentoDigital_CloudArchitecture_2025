@@ -126,6 +126,9 @@ aplicando:\
 
 # Desarrollo Paso a Paso
 
+- [Repo GitHub](https://github.com/TheNefelin/AWS_ApiSNS_WorkerSQS_.NET8)
+
+```
 Usuario -> (POST Pedido) -> Monolito .NET (EC2 + Docker)
     |
     |---> Guarda en RDS
@@ -140,5 +143,233 @@ Usuario -> (POST Pedido) -> Monolito .NET (EC2 + Docker)
                           +--> Worker .NET procesa facturación (en segundo plano)
                           +--> Actualiza stock en RDS
                           +--> Notificación email (factura) 
+```
 
-monolito
+---
+
+## **Seciruty Group**:
+### monolito-sg-rds
+- **Name**: monolito-sg-rds
+- **Description**: Acceso RDS
+- **VPC**: default
+- **Inbound rules**:
+  - PostgreSQL
+    - Type: PostgreSQL
+    - Protocol: TCP
+    - Port range: 5432
+    - Destination type: Custom
+    - Destination: 0.0.0.0/0
+    - Description: Acceso PostgreSQL
+- **Outbound rules**:
+  - Outbound
+    - Type: PostgreSQL
+    - Protocol: TCP
+    - Port range: 5432
+    - Destination type: Custom
+    - Destination: 0.0.0.0/0
+    - Description: Acceso PostgreSQL
+
+### webapi-sg
+- **Name**: monolito-sg-webapi
+- **Description**: Acceso WebApi
+- **VPC**: default
+- **Inbound rules**:
+  - SSH
+    - Type: SSH
+    - Protocol: TCP
+    - Port range: 22
+    - Destination type: Anywhere-IPv4
+    - Destination: 0.0.0.0/0
+    - Description: Acceso SSH
+  - HTTP
+    - Type: HTTP
+    - Protocol: TCP
+    - Port range: 80
+    - Destination type: Anywhere-IPv4
+    - Destination: 0.0.0.0/0
+    - Description: Acceso web    
+- **Outbound rules**:
+  - Outbound
+    - Type: All traffic
+    - Protocol: all
+    - Port range: all
+    - Destination type: Custom
+    - Destination: 0.0.0.0/0
+    - Description:
+
+---
+
+## **S3 Bucket**: Almacenamiento Estático
+### Bucket
+- **Name**: monolito-storage
+- **Object Ownership**: ACLs desactivados
+- **Block all public access**: check
+- **Versioning**: Disable
+- **Encryption**: SSE-S3
+- **Bucket Key**: Disable
+
+```bash
+monolito-storage/
+├── docs/
+└── images/
+```
+
+---
+
+## **RDS**: Relational Database Service
+### PostgreSQL
+- **Creation method**: Standard create
+- **Engine type**: PostgreSQL
+- **Templates**: Dev/Test
+- **Availability and durability**: Multi-AZ DB instance deployment (2 instances)
+- **DB instance**: monolito-pgdb
+- **Master username**: postgres
+- **Credentials management**: ********
+- **Instance configuration**:
+    - Burstable classes (includes t classes)
+    - db.t3.micro
+- **Allocated storage**: 20 GiB
+- **Enable storage autoscaling**: check
+- **Compute resource**: Don’t connect to an EC2 compute resource
+- **VPC**: default
+- **DB subnet group**: default
+- **Public access**: yes
+- **Security groups**: monolito-sg-rds
+- **Monitoring**: Database Insights - Standard
+- **Enhanced Monitoring**: Disabled  
+
+```sql
+CREATE TABLE Companies (
+    company_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    img TEXT
+);
+
+INSERT INTO Companies 
+    (name, email, img) 
+VALUES
+    ('Weyland-Yutani', 'info@wy.com', 'wy.webp'),
+    ('Omni Consumer Products', 'info@ocp.com', 'ocp.webp'),
+    ('Cyberdyne Systems Corporation', 'info@csc.com', 'csc.webp'),
+    ('Umbrella Corporation', 'info@uc.com', 'uc.webp');
+```
+
+```sql
+CREATE TABLE Products (
+    product_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name VARCHAR(255) NOT NULL,
+    description TEXT NOT NULL,
+    price INT NOT NULL
+);
+
+INSERT INTO Products 
+	(name, description, price) 
+VALUES
+	('Réplica del Cargador de Montacargas P-5000', '', 55000),
+	('Set de Miniaturas Coleccionables de Xenomorfos', '', 18000),
+	('Figura de Acción de un Sintético con Daños de Batalla', '', 29990),
+	('Vehículo de Patrulla OCP con Luces y Sonido', '', 22000),
+	('Figura de RoboCop "Ultimate Edition"', '', 45000),
+	('Set de Construcción "Torre ED-209"', '', 68000),
+	('Figura de Acción del T-800 Endoskeleton', '', 35000),
+	('Cabeza de Colección de un T-1000 de Metal Líquido', '', 75000),
+	('Réplica del Computador de Skynet', '', 50000),
+	('Figura de Acción del T-Virus Zombie', '', 28000),
+	('Set de Laboratorio Secreto de Umbrella', '', 60000),
+	('Réplica de la Vacuna Anti-Virus', '', 15000);
+
+SELECT * FROM Products;
+```
+
+---
+
+## **SQS**: Simple Queue Service:
+### Create queue
+- **Type**: Standard
+- **Name**: monolito-sqs-worker
+- **Visibility timeout**: 30 Seconds
+- **Message retention period**: 4 Days
+- **Delivery delay**: 0
+- **Receive message wait time**: 0
+- **Maximum message size**: 1024 KiB
+
+> Obtener URL para la variable de entorno
+
+---
+
+## **SNS**: Simple Notification Service 
+### Topics
+- **Topics**: Standard
+- **Name**: monolito-sns-webapi
+
+### Create subscription
+- **Topic ARN**: monolito-sns-webapi
+- **Protocol**: Amazon SQS
+- **Endpoint**: monolito-sqs-worker
+
+> Obtener ARN para la variable de entorno
+
+---
+
+## Desplegar WebApi + Worker (SNS + SQS)
+- Opcion 1: 
+    - **EB**: Elastic Beanstalk
+- Opcion 2: 
+    - **CloudShell**
+    - **ECR**: Elastic Container Registry 
+    - **ECS**: Elastic Container Service
+
+---
+
+## Opcion 1: **EB**
+### WebApi
+- **Environment tier**: Web server environment
+- **Application name**: monolito-eb-webapi
+- **Platform**: .NET Core on Linux
+- **Platform branch**: .NET 8 running on 64bit Amazon Linux 2023
+- **Platform version**: 3.5.4
+- **Upload your code**: check
+- **Version labe**: 1
+- **Local file**: AWS_SNS_WebApi.zip
+- **Single instance**: check
+- **Service role**: LabRole
+- **EC2 instance profile**: LabInstanceProfile
+- **EC2 key pair**: vockey
+- **VPC**: default
+- **Public IP address**: Enable
+- **Instance subnets**:
+  - us-east-1a
+  - us-east-1b
+- **EC2 security groups**: monolito-sg-webapi
+- **Health reporting**: Basic
+- **Managed updates**: uncheck
+- **Environment properties**:
+  - Region
+    - **Name**: AWS_REGION
+    - **Value**: us-east-1
+  - SNS
+    - **Name**: SNS_TOPIC_ARN
+    - **Value**: arn:aws:sns:us-east-1:123:monolitica-sns
+  - RDS Host
+    - **Name**: DB_HOST
+    - **Value**: monolito-pgdb.123.us-east-1.rds.amazonaws.com
+  - RDS Port
+    - **Name**: DB_PORT
+    - **Value**: 5432
+  - RDS Name
+    - **Name**: DB_NAME
+    - **Value**: postgres
+  - RDS User
+    - **Name**: DB_USER
+    - **Value**: postgres    
+  - RDS Password
+    - **Name**: DB_PASSWORD
+    - **Value**: ****
+
+### WebApi
+- **Environment tier**: Web server environment
+- **Application name**: monolito-eb-worker
+...
+
+---
