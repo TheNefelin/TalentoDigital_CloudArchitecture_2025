@@ -1,0 +1,53 @@
+/*
+Este archivo CSS usa principalmente clases de Tailwind CSS en el HTML.
+Puedes añadir estilos personalizados aquí si lo deseas.
+*/
+
+/* Ejemplo: Estilo para la lista de activos */
+.asset-item {
+    background-color: #ffffff;
+    border: 1px solid #e5e7eb; /* gray-200 */
+    border-radius: 0.5rem; /* rounded-lg */
+    padding: 1rem;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); /* shadow-sm */
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.asset-item-details {
+    display: flex;
+    flex-direction: column;
+}
+
+.asset-item-name {
+    font-weight: 600; /* font-semibold */
+    color: #374151; /* gray-700 */
+}
+
+.asset-item-info {
+    font-size: 0.875rem; /* text-sm */
+    color: #6b7280; /* gray-500 */
+}
+
+.asset-item-value {
+    font-weight: 700; /* font-bold */
+    color: #10b981; /* green-500 */
+    font-size: 1.125rem; /* text-lg */
+}
+
+/* Estilo para el botón de eliminar activo */
+.delete-button {
+    background-color: #ef4444; /* red-500 */
+    color: white;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.375rem; /* rounded-md */
+    font-size: 0.875rem; /* text-sm */
+    font-weight: 500; /* font-medium */
+    cursor: pointer;
+    transition: background-color 0.2s ease-in-out;
+}
+
+.delete-button:hover {
+    background-color: #dc2626; /* red-600 */
+}

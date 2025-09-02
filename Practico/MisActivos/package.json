@@ -1,0 +1,23 @@
+{
+  "name": "my-personal-portfolio",
+  "version": "1.0.0",
+  "description": "Una aplicación monolítica simple para gestionar una cartera de inversión personal.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": [
+    "nodejs",
+    "express",
+    "sql-server",
+    "monolithic",
+    "portfolio",
+    "financial"
+  ],
+  "author": "Tu Nombre",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.19.2",
+    "mssql": "^11.0.1"
+  }
+}

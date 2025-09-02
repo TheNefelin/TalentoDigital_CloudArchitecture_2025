@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Cartera Personal</title>
+    <!-- Carga de Tailwind CSS para estilos rápidos y responsivos -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6; /* Fondo gris claro */
+        }
+        /* Estilos adicionales para la tabla si Tailwind no cubre todo */
+        th, td {
+            padding: 0.75rem 1.5rem; /* Ajuste de padding para celdas */
+            border-bottom: 1px solid #e5e7eb; /* Borde inferior para filas */
+        }
+        tbody tr:last-child td {
+            border-bottom: none; /* Eliminar borde inferior de la última fila */
+        }
+    </style>
+</head>
+
+
+<body class="bg-gray-100 min-h-screen flex items-center justify-center p-4">
+    <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-4xl lg:max-w-6xl"> <!-- Aumentado el ancho máximo para la tabla -->
+        <h1 class="text-3xl font-bold text-gray-800 mb-6 text-center">Mi Cartera Personal</h1>
+<div class="bg-purple-100 p-2 rounded-lg mb-4 text-center text-sm">
+    Servidor actual: <span id="server-info" class="font-semibold text-purple-800">Cargando...</span>
+</div>
+        <!-- Resumen de la Cartera -->
+        <div class="bg-blue-100 p-4 rounded-lg mb-6 shadow-sm">
+            <h2 class="text-xl font-semibold text-blue-800 mb-2">Resumen Actual</h2>
+            <p class="text-2xl font-bold text-blue-900">Valor Total: <span id="total-value">0.00</span></p>
+            <p class="text-sm text-blue-700 mt-1">(Precios simulados o estáticos para el ejercicio)</p>
+        </div>
+
+        <!-- Sección para Añadir Activo -->
+        <div class="mb-8">
+            <h2 class="text-xl font-semibold text-gray-700 mb-4">Añadir Nuevo Activo</h2>
+            <form id="add-asset-form" class="space-y-4">
+                <div>
+                    <label for="asset-name" class="block text-sm font-medium text-gray-700">Nombre del Activo (Ej: AAPL, BTC)</label>
+                    <input type="text" id="asset-name" name="name" required
+                           class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                           placeholder="Ej: Tesla">
+                </div>
+                <div>
+                    <label for="asset-quantity" class="block text-sm font-medium text-gray-700">Cantidad</label>
+                    <input type="number" id="asset-quantity" name="quantity" required min="0.01" step="0.01"
+                           class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                           placeholder="Ej: 10.5">
+                </div>
+                <div>
+                    <label for="purchase-price" class="block text-sm font-medium text-gray-700">Precio de Compra por Unidad ($)</label>
+                    <input type="number" id="purchase-price" name="purchasePrice" required min="0.01" step="0.01"
+                           class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                           placeholder="Ej: 150.25">
+                </div>
+                <button type="submit"
+                        class="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 shadow-md">
+                    Añadir Activo
+                </button>
+            </form>
+            <div id="message-box" class="mt-4 text-center text-sm font-medium hidden"></div>
+        </div>
+
+        <!-- Lista de Activos en una Tabla -->
+        <div>
+            <h2 class="text-xl font-semibold text-gray-700 mb-4">Mis Activos</h2>
+            <div class="overflow-x-auto rounded-lg shadow-md border border-gray-200"> <!-- Contenedor para tabla scrollable en móviles -->
+                <table id="assets-table" class="min-w-full divide-y divide-gray-200"> <!-- Asegura que la tabla ocupe todo el ancho y tenga divisores -->
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="py-3 px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                            <th class="py-3 px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nombre</th>
+                            <th class="py-3 px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cantidad</th>
+                            <th class="py-3 px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Precio Compra</th>
+                            <th class="py-3 px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Precio Actual</th>
+                            <th class="py-3 px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ganancia/Pérdida</th>
+                            <th class="py-3 px-6 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Valor Actual</th>
+                            <th class="py-3 px-6 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody id="assets-table-body" class="bg-white divide-y divide-gray-200">
+                        <!-- Los activos se cargarán aquí con JavaScript -->
+                    </tbody>
+                </table>
+                <!-- Mensaje de no activos, se mostrará si la tabla está vacía -->
+                <p class="text-gray-500 text-center py-4 hidden" id="no-assets-message">No tienes activos aún. ¡Añade uno!</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
