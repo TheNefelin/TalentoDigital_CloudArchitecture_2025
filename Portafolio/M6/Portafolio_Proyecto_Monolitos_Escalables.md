@@ -155,6 +155,7 @@ aplicando:\
 <img src=".\img\App_03.png">
 <img src=".\img\App_04.png">
 <img src=".\img\App_05.png">
+<img src=".\img\App_06.png">
 
 ---
 
