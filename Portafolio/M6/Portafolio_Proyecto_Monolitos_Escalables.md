@@ -128,39 +128,33 @@ aplicando:\
 
 - [Repo GitHub](https://github.com/TheNefelin/AWS_ApiSNS_WorkerSQS_.NET8)
 
-```
-Usuario -> (POST Pedido) -> Monolito .NET (EC2 + Docker)
-    |
-    |---> Guarda en RDS
-    |
-    |---> Publica evento "DonacionCreado" en SNS
-                 |
-                 +--> Notificación email (subscripción)
-                 +--> Notificación email (desubscripción)
-                 +--> Notificación email (donacion)            
-                 +--> Cola SQS "Facturacion"
-                          |
-                          +--> Worker .NET procesa facturación (en segundo plano)
-                          +--> Actualiza stock en RDS
-                          +--> Notificación email (factura) 
-```
-
-```
-Usuario -> WEB API
-    |
-    |---> GET /companies (RDS)
-    |---> GET /products (RDS)
-    |---> POST /subscribe (SNS con filtro para emails)
-    |---> POST /unsubscribe (SNS con filtro para emails)
-    |---> POST /donate
-    |       |
-    |       +--> SNS con atributo: target = "email_especifico"
-    |---> POST /notification
-            |
-            +--> SNS con atributo: target = "all"
-```
-
+### Diagrama Arquitectura
 <img src=".\img\Diag_01.png">
+
+### Diagrama Flujo SQS y SNS (Bonus S3)
+<img src=".\img\Diag_SNS_SQS_S3.png">
+
+### Que hace esta aplicaicon?
+1. Suscribe y desuscribe correo a donaciones anonimas
+2. Envia mensaje masivo a todos los suscritos
+3. Hacer donacion de regalos anonimos 1 a 3
+4. Al donar eligue una empresa aleatoria quen gestionara la donacion de los regalos anonimos
+5. Eligira los N regalos anonimos de forma aleatoria
+6. Generara un PDF de facturacion que se debe pagar a la empresa y la enviara por correo con el documento
+
+### Lo Tecnico
+- La informacion de las Empresas y Regalos se obtienen de un `AWS RDS`
+- Las notificaciones masivas y donaciones se gestionan por `AWS SNS` segun condicion en Diagrama Flujo SQS y SNS.
+- Envio de `AWS SQS` a una aplicacion Worker quien gestionara a que empresa se debe pagar la donacion y que Regalos salieron sorteados.
+- Generar un PD agregando una imagen que esta en `AWS S3`
+* Guardar el PDF en `AWS S3` y generar un link de descarga temporal
+- Enviar correo con la URL de descarga del PDF por `AWS SNS`
+
+<img src=".\img\App_01.png">
+<img src=".\img\App_02.png">
+<img src=".\img\App_03.png">
+<img src=".\img\App_04.png">
+<img src=".\img\App_05.png">
 
 ---
 
@@ -187,7 +181,7 @@ Usuario -> WEB API
     - Description: Acceso PostgreSQL
 
 ### webapi-sg
-- **Name**: monolito-sg-webapi
+- **Name**: monolito-sg-web
 - **Description**: Acceso WebApi
 - **VPC**: default
 - **Inbound rules**:
@@ -270,6 +264,8 @@ VALUES
     ('Omni Consumer Products', 'info@ocp.com', 'ocp.webp'),
     ('Cyberdyne Systems Corporation', 'info@csc.com', 'csc.webp'),
     ('Umbrella Corporation', 'info@uc.com', 'uc.webp');
+
+SELECT * FROM Companies;    
 ```
 
 ```sql
@@ -281,20 +277,20 @@ CREATE TABLE Products (
 );
 
 INSERT INTO Products 
-	(name, description, price) 
+    (name, description, price) 
 VALUES
-	('Réplica del Cargador de Montacargas P-5000', '', 55000),
-	('Set de Miniaturas Coleccionables de Xenomorfos', '', 18000),
-	('Figura de Acción de un Sintético con Daños de Batalla', '', 29990),
-	('Vehículo de Patrulla OCP con Luces y Sonido', '', 22000),
-	('Figura de RoboCop "Ultimate Edition"', '', 45000),
-	('Set de Construcción "Torre ED-209"', '', 68000),
-	('Figura de Acción del T-800 Endoskeleton', '', 35000),
-	('Cabeza de Colección de un T-1000 de Metal Líquido', '', 75000),
-	('Réplica del Computador de Skynet', '', 50000),
-	('Figura de Acción del T-Virus Zombie', '', 28000),
-	('Set de Laboratorio Secreto de Umbrella', '', 60000),
-	('Réplica de la Vacuna Anti-Virus', '', 15000);
+    ('Réplica del Cargador de Montacargas P-5000', '', 55000),
+    ('Set de Miniaturas Coleccionables de Xenomorfos', '', 18000),
+    ('Figura de Acción de un Sintético con Daños de Batalla', '', 29990),
+    ('Vehículo de Patrulla OCP con Luces y Sonido', '', 22000),
+    ('Figura de RoboCop "Ultimate Edition"', '', 45000),
+    ('Set de Construcción "Torre ED-209"', '', 68000),
+    ('Figura de Acción del T-800 Endoskeleton', '', 35000),
+    ('Cabeza de Colección de un T-1000 de Metal Líquido', '', 75000),
+    ('Réplica del Computador de Skynet', '', 50000),
+    ('Figura de Acción del T-Virus Zombie', '', 28000),
+    ('Set de Laboratorio Secreto de Umbrella', '', 60000),
+    ('Réplica de la Vacuna Anti-Virus', '', 15000);
 
 SELECT * FROM Products;
 ```
@@ -304,7 +300,7 @@ SELECT * FROM Products;
 ## **SQS**: Simple Queue Service:
 ### Create queue
 - **Type**: Standard
-- **Name**: monolito-sqs-worker
+- **Name**: monolito-sqs
 - **Visibility timeout**: 30 Seconds
 - **Message retention period**: 4 Days
 - **Delivery delay**: 0
@@ -318,31 +314,30 @@ SELECT * FROM Products;
 ## **SNS**: Simple Notification Service 
 ### Topics
 - **Topics**: Standard
-- **Name**: monolito-sns-webapi
+- **Name**: monolito-sns
 
 ### Create subscription
-- **Topic ARN**: monolito-sns-webapi
+- **Topic ARN**: monolito-sns
 - **Protocol**: Amazon SQS
-- **Endpoint**: monolito-sqs-worker
+- **Endpoint**: monolito-sqs
 
 > Obtener ARN para la variable de entorno
 
 - Subscription filter policy (email)
 ```json
 {
- "action": [
-    "process",
-    "generate_pdf"
- ]
-}
-```
-- Subscription filter policy (worker)
-```json
-{
   "target": [
     "test@email.com",
     "all"
   ]
+}
+```
+- Subscription filter policy (SQS)
+```json
+{
+ "action": [
+    "process"
+ ]
 }
 ```
 
@@ -377,16 +372,10 @@ SELECT * FROM Products;
 - **Instance subnets**:
   - us-east-1a
   - us-east-1b
-- **EC2 security groups**: monolito-sg-webapi
+- **EC2 security groups**: monolito-sg-web
 - **Health reporting**: Basic
 - **Managed updates**: uncheck
 - **Environment properties**:
-  - Region
-    - **Name**: AWS_REGION
-    - **Value**: us-east-1
-  - SNS
-    - **Name**: SNS_TOPIC_ARN
-    - **Value**: arn:aws:sns:us-east-1:123:monolitica-sns
   - RDS Host
     - **Name**: DB_HOST
     - **Value**: monolito-pgdb.123.us-east-1.rds.amazonaws.com
@@ -400,12 +389,66 @@ SELECT * FROM Products;
     - **Name**: DB_USER
     - **Value**: postgres    
   - RDS Password
-    - **Name**: DB_PASSWORD
+    - **Name**: DB_PASS
     - **Value**: ****
+  - Region
+    - **Name**: AWS_REGION
+    - **Value**: us-east-1
+  - SNS
+    - **Name**: AWS_SNS_TOPIC_ARN
+    - **Value**: arn:aws:sns:us-east-1:123:monolitica-sns
 
-### WebApi
+### WebApp Worker
 - **Environment tier**: Web server environment
 - **Application name**: monolito-eb-worker
-...
+- **Platform**: .NET Core on Linux
+- **Platform branch**: .NET 8 running on 64bit Amazon Linux 2023
+- **Platform version**: 3.5.4
+- **Upload your code**: check
+- **Version labe**: 1
+- **Local file**: AWS_SNS_WebWorker.zip
+- **Single instance**: check
+- **Service role**: LabRole
+- **EC2 instance profile**: LabInstanceProfile
+- **EC2 key pair**: vockey
+- **VPC**: default
+- **Public IP address**: Enable
+- **Instance subnets**:
+  - us-east-1a
+  - us-east-1b
+- **EC2 security groups**: monolito-sg-web
+- **Health reporting**: Basic
+- **Managed updates**: uncheck
+- **Environment properties**:
+  - RDS Host
+    - **Name**: DB_HOST
+    - **Value**: monolito-pgdb.123.us-east-1.rds.amazonaws.com
+  - RDS Port
+    - **Name**: DB_PORT
+    - **Value**: 5432
+  - RDS Name
+    - **Name**: DB_NAME
+    - **Value**: postgres
+  - RDS User
+    - **Name**: DB_USER
+    - **Value**: postgres    
+  - RDS Password
+    - **Name**: DB_PASS
+    - **Value**: ****
+  - Region
+    - **Name**: AWS_REGION
+    - **Value**: us-east-1
+  - SQS
+    - **Name**: AWS_SQS_URL
+    - **Value**: https://sqs.us-east-1.amazonaws.com/123/my-sqs
+  - SNS
+    - **Name**: AWS_SNS_TOPIC_ARN
+    - **Value**: arn:aws:sns:us-east-1:123:monolitica-sns
+  - S3
+    - **Name**: AWS_S3_BUCKET_NAME
+    - **Value**: monolito-storage
 
 ---
+
+## Opcion 2: **EB** ECS + ECR + CLoudShell
+
