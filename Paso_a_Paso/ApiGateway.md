@@ -1,0 +1,60 @@
+## **Api Gateway**:
+### HTTP API - add Clouster - API server endpoint
+- **API name**: node-microservices-demo-api
+  - **Integrations**:
+    - HTTP
+    - Method: GET
+    - URL endpoint: https:// + auth-service-LoadBalancer-External-IP + :3000
+  - **Integrations**:
+    - HTTP
+    - Method: POST
+    - URL endpoint: https:// + auth-service-LoadBalancer-External-IP + :3000/api/register
+  - **Integrations**:
+    - HTTP
+    - Method: POST
+    - URL endpoint: https:// + auth-service-LoadBalancer-External-IP + :3000/api/login
+  - **Integrations**:
+    - HTTP
+    - Method: GET
+    - URL endpoint: https:// + orders-service-LoadBalancer-External-IP + :3000
+  - **Integrations**:
+    - HTTP
+    - Method: ANY
+    - URL endpoint: https:// + orders-service-LoadBalancer-External-IP + :3000/api/orders
+  - **Integrations**:
+    - HTTP
+    - Method: GET
+    - URL endpoint: https:// + products-service-LoadBalancer-External-IP + :3000
+  - **Integrations**:
+    - HTTP
+    - Method: ANY
+    - URL endpoint: https:// + products-service-LoadBalancer-External-IP + :3000/api/products
+- **Configure routes**:
+  - Auth
+    - **Method**: GET
+    - **Resource path**: /auth
+    - **Integration target**: URL endpoint Auth
+  - Auth
+    - **Method**: POST
+    - **Resource path**: /api/register
+    - **Integration target**: URL endpoint Auth
+  - Auth
+    - **Method**: POST
+    - **Resource path**: /api/login
+    - **Integration target**: URL endpoint Auth
+  - Orders
+    - **Method**: GET
+    - **Resource path**: /orders
+    - **Integration target**: URL endpoint Orders
+  - Orders
+    - **Method**: ANY
+    - **Resource path**: /api/orders
+    - **Integration target**: URL endpoint Orders
+  - Products
+    - **Method**: GET
+    - **Resource path**: /products
+    - **Integration target**: URL endpoint Products
+  - Products
+    - **Method**: ANY
+    - **Resource path**: /api/products
+    - **Integration target**: URL endpoint Products
