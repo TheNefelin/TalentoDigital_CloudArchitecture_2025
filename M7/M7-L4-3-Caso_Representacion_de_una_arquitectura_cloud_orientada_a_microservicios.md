@@ -158,7 +158,7 @@
 ---
 
 ## **Seciruty Group**:
-### node-sg-bastion
+### node-sg-service
 - **Name**: node-sg-service
 - **Description**: Access Node
 - **VPC**: default
