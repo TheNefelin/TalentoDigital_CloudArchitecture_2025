@@ -7,7 +7,7 @@ El sistema monolítico actual de la fintech **MicroPay** presenta problemas de a
 
 ### Objetivo
 Diseñar e implementar una arquitectura basada en microservicios con:
-- Contenedores Docker y orquestación con Kubernetes (EKS).
+- Contenedores Docker y Orquestación con Kubernetes (EKS).
 - API Gateway con autenticación JWT.
 - Service Discovery, Circuit Breaker y mensajería asíncrona.
 - Alta disponibilidad, escalabilidad y resiliencia.
@@ -96,11 +96,12 @@ Diseñar e implementar una arquitectura basada en microservicios con:
 
 # Desarrollo Paso a Paso
 
+### Flujo real de registro
 ```Mermaid
 sequenceDiagram
     participant User as Usuario
-    participant App as Tu API Gateway
-    participant Lambda as Tu Lambda
+    participant App as API Gateway
+    participant Lambda as Lambda
     participant Cognito
 
     User->>App: POST /api/signup {email, password}
@@ -125,12 +126,12 @@ sequenceDiagram
     - Description: Acceso PostgreSQL
 - **Outbound rules**:
   - Outbound
-    - Type: PostgreSQL
-    - Protocol: TCP
-    - Port range: 5432
-    - Destination type: Anywhere-IPv4
+    - Type: All traffic
+    - Protocol: All
+    - Port range: All
+    - Destination type: Custom
     - Destination: 0.0.0.0/0
-    - Description: Acceso PostgreSQL
+    - Description:
 
 ---
 
@@ -158,36 +159,37 @@ sequenceDiagram
 
 ---
 
+## **SQS**: Simple Queue Service:
+### Create queue
+- **Type**: Standard
+- **Name**: micropay-sqs
+- **Visibility timeout**: 30 Seconds
+- **Message retention period**: 4 Days
+- **Delivery delay**: 0
+- **Receive message wait time**: 0
+- **Maximum message size**: 1024 KiB
+
+---
+
+## **SNS**: Simple Notification Service 
+### Topics
+- **Topics**: Standard
+- **Name**: micropay-sns
+
+### Create subscription
+- **Topic ARN**: micropay-sns
+- **Protocol**: Amazon SQS
+- **Endpoint**: micropay-sqs
+
+---
+
 ## **ECR**: Elastic Container Registry
-### Repositorio - auth-service-repo
-- **Repository name**: micropay-repo
-- **Image tag mutability**: Mutable
-- **Mutable tag exclusions**:
-- **Encryption configuration**: AES-256
-- **View push commands**
-
-> [!CAUTION]
-> View push commands from `micropay-repo`.
-
 ### Repositorio - products-service-repo
-- **Repository name**: products-service-repo
+- **Repository name**: micropay-repo-notification
 - **Image tag mutability**: Mutable
 - **Mutable tag exclusions**:
 - **Encryption configuration**: AES-256
 - **View push commands**
-
-> [!CAUTION]
-> View push commands from `products-service-repo`.
-
-### Repositorio - orders-service-repo
-- **Repository name**: orders-service-repo
-- **Image tag mutability**: Mutable
-- **Mutable tag exclusions**:
-- **Encryption configuration**: AES-256
-- **View push commands**
-
-> [!CAUTION]
-> View push commands from `orders-service-repo`.
 
 ---
 
@@ -201,7 +203,7 @@ sequenceDiagram
 - **ARC Zonal shift**: disabled
 - **VPC**: default
 - **Subnets**: default
-- **Additional security groups**: node-sg-service
+- **Additional security groups**: micropay-sg-service
 - **Cluster endpoint access**: Public and private
 
 ### Clusters - Compute - Add node group
@@ -224,26 +226,391 @@ sequenceDiagram
 - **Application type**: Machine-to-machine application
 - **Name**: micropay-cognito
 
-### Cognito - User - Create user 
-- ****: 
+### Cognito - User Pool
+- User pool ID
 
-## **Lambda**
-```python
-# Ejemplo con Lambda
+### Cognito - App clients - micropay-cognito
+- Client ID
+- Client secret
+
+### Cognito - App clients - micropay-cognito - edit
+- **Sign in with username and password: ALLOW_USER_PASSWORD_AUTH**: check
+- **Sign in with server-side administrative credentials: ALLOW_ADMIN_USER_PASSWORD_AUTH**: check
+
+---
+
+## **Lambda**: Auth Register
+### Lambda Register
+- **Function name**: micropay-lambda-register
+- **Runtime**: Python 3.13
+- **Architecture**: x86_64
+- **Execution role**: LabRole
+
+### Environment variable
+- **COGNITO_CLIENT_ID**: COGNITO_CLIENT_ID
+- **COGNITO_CLIENT_SECRET**: COGNITO_CLIENT_SECRET
+- **COGNITO_USER_POOL_ID**: COGNITO_USER_POOL_ID
+
+```py
 import boto3
+import json
+import os
+import hmac
+import hashlib
+import base64
 
-def sign_up(email, password):
+def calculate_secret_hash(username, client_id, client_secret):
+    message = username + client_id
+    dig = hmac.new(
+        client_secret.encode('utf-8'),
+        msg=message.encode('utf-8'),
+        digestmod=hashlib.sha256
+    ).digest()
+    return base64.b64encode(dig).decode()
+
+def lambda_handler(event, context):
     client = boto3.client('cognito-idp')
     
-    response = client.sign_up(
-        ClientId='13enhv5gkufif0d956a688fb5k',
-        Username=email,
-        Password=password,
-        UserAttributes=[
-            {'Name': 'email', 'Value': email}
-        ]
-    )
-    return response
+    CLIENT_ID = os.environ['COGNITO_CLIENT_ID']
+    CLIENT_SECRET = os.environ['COGNITO_CLIENT_SECRET']
+    USER_POOL_ID = os.environ['COGNITO_USER_POOL_ID']
+    
+    body = json.loads(event['body'])
+    email = body['email']
+    password = body['password']
+    
+    secret_hash = calculate_secret_hash(email, CLIENT_ID, CLIENT_SECRET)
+    
+    try:
+        # 1. Registrar usuario
+        response = client.sign_up(
+            ClientId=CLIENT_ID,
+            Username=email,
+            Password=password,
+            SecretHash=secret_hash,
+            UserAttributes=[{'Name': 'email', 'Value': email}]
+        )
+        
+        # 2. ✅ VERIFICAR ADMINISTRATIVAMENTE (sin código)
+        client.admin_confirm_sign_up(
+            UserPoolId=USER_POOL_ID,
+            Username=email
+        )
+        
+        # 3. ✅ MARCAR EMAIL COMO VERIFICADO
+        client.admin_update_user_attributes(
+            UserPoolId=USER_POOL_ID,
+            Username=email,
+            UserAttributes=[
+                {'Name': 'email_verified', 'Value': 'true'}
+            ]
+        )
+        
+        return {
+            'statusCode': 200,
+            'headers': {'Access-Control-Allow-Origin': '*'},
+            'body': json.dumps({
+                'message': 'Usuario registrado y verificado automáticamente',
+                'userSub': response['UserSub']
+            })
+        }
+        
+    except client.exceptions.UsernameExistsException:
+        return {
+            'statusCode': 400,
+            'headers': {'Access-Control-Allow-Origin': '*'},
+            'body': json.dumps({'error': 'El usuario ya existe'})
+        }
+    except Exception as e:
+        return {
+            'statusCode': 400,
+            'headers': {'Access-Control-Allow-Origin': '*'},
+            'body': json.dumps({'error': str(e)})
+        }
+```
+```json
+{
+  "body": "{\"email\": \"test@example.com\", \"password\": \"Password123!\"}",
+  "httpMethod": "POST"
+}
+```
+```json
+{
+  "email": "test@example.com", 
+  "password": "Password123!"
+}
+```
+
+## **Lambda**: Auth Login
+### Lambda Login
+- **Function name**: micropay-lambda-login
+- **Runtime**: Python 3.13
+- **Architecture**: x86_64
+- **Execution role**: LabRole
+
+### Environment variable
+- **COGNITO_CLIENT_ID**: COGNITO_CLIENT_ID
+- **COGNITO_CLIENT_SECRET**: COGNITO_CLIENT_SECRET
+- **COGNITO_USER_POOL_ID**: COGNITO_USER_POOL_ID
+
+```py
+import boto3
+import json
+import os
+import hmac
+import hashlib
+import base64
+
+# Calcular SECRET_HASH (igual que en registro)
+def calculate_secret_hash(username, client_id, client_secret):
+    message = username + client_id
+    dig = hmac.new(
+        client_secret.encode('utf-8'),
+        msg=message.encode('utf-8'),
+        digestmod=hashlib.sha256
+    ).digest()
+    return base64.b64encode(dig).decode()
+
+def lambda_handler(event, context):
+    client = boto3.client('cognito-idp')
+    
+    # Obtener configuración desde variables de entorno
+    CLIENT_ID = os.environ['COGNITO_CLIENT_ID']
+    CLIENT_SECRET = os.environ['COGNITO_CLIENT_SECRET']
+    USER_POOL_ID = os.environ['COGNITO_USER_POOL_ID']
+    
+    try:
+        # Parsear el body de la request
+        body = json.loads(event['body'])
+        email = body['email']
+        password = body['password']
+        
+        # Calcular secret hash (OBLIGATORIO porque tienes Client Secret)
+        secret_hash = calculate_secret_hash(email, CLIENT_ID, CLIENT_SECRET)
+        
+        # Hacer login con Cognito
+        response = client.admin_initiate_auth(
+            UserPoolId=USER_POOL_ID,
+            ClientId=CLIENT_ID,
+            AuthFlow='ADMIN_NO_SRP_AUTH',
+            AuthParameters={
+                'USERNAME': email,
+                'PASSWORD': password,
+                'SECRET_HASH': secret_hash
+            }
+        )
+        
+        # Extraer tokens de la respuesta
+        auth_result = response['AuthenticationResult']
+        
+        # Respuesta exitosa
+        return {
+            'statusCode': 200,
+            'headers': {
+                'Access-Control-Allow-Origin': '*',
+                'Content-Type': 'application/json'
+            },
+            'body': json.dumps({
+                'message': 'Login exitoso',
+                'access_token': auth_result['AccessToken'],
+                'refresh_token': auth_result['RefreshToken'],
+                'expires_in': auth_result['ExpiresIn'],
+                'token_type': auth_result['TokenType']
+            })
+        }
+        
+    except client.exceptions.NotAuthorizedException:
+        return {
+            'statusCode': 401,
+            'headers': {'Access-Control-Allow-Origin': '*'},
+            'body': json.dumps({'error': 'Email o contraseña incorrectos'})
+        }
+    except client.exceptions.UserNotFoundException:
+        return {
+            'statusCode': 404,
+            'headers': {'Access-Control-Allow-Origin': '*'},
+            'body': json.dumps({'error': 'Usuario no encontrado'})
+        }
+    except client.exceptions.UserNotConfirmedException:
+        return {
+            'statusCode': 403,
+            'headers': {'Access-Control-Allow-Origin': '*'},
+            'body': json.dumps({'error': 'Usuario no verificado. Revisa tu email para verificar la cuenta.'})
+        }
+    except json.JSONDecodeError:
+        return {
+            'statusCode': 400,
+            'headers': {'Access-Control-Allow-Origin': '*'},
+            'body': json.dumps({'error': 'Formato de JSON inválido'})
+        }
+    except KeyError as e:
+        return {
+            'statusCode': 400,
+            'headers': {'Access-Control-Allow-Origin': '*'},
+            'body': json.dumps({'error': f'Falta campo requerido: {str(e)}'})
+        }
+    except Exception as e:
+        return {
+            'statusCode': 500,
+            'headers': {'Access-Control-Allow-Origin': '*'},
+            'body': json.dumps({'error': f'Error interno del servidor: {str(e)}'})
+        }
+```
+```json
+{
+  "body": "{\"email\": \"test@example.com\", \"password\": \"Password123!\"}",
+  "httpMethod": "POST"
+}
+```
+```json
+{
+  "email": "test@example.com", 
+  "password": "Password123!"
+}
+```
+
+## **Lambda**: Auth logout
+### Lambda Register
+- **Function name**: micropay-lambda-logout
+- **Runtime**: Python 3.13
+- **Architecture**: x86_64
+- **Execution role**: LabRole
+
+### Environment variable
+- **COGNITO_CLIENT_ID**: COGNITO_CLIENT_ID
+- **COGNITO_CLIENT_SECRET**: COGNITO_CLIENT_SECRET
+- **COGNITO_USER_POOL_ID**: COGNITO_USER_POOL_ID
+
+```py
+import boto3
+import json
+import os
+import hmac
+import hashlib
+import base64
+
+def calculate_secret_hash(username, client_id, client_secret):
+    """
+    Calcula el SECRET_HASH requerido por Cognito cuando el cliente tiene Client Secret
+    """
+    message = username + client_id
+    dig = hmac.new(
+        client_secret.encode('utf-8'),
+        msg=message.encode('utf-8'),
+        digestmod=hashlib.sha256
+    ).digest()
+    return base64.b64encode(dig).decode()
+
+def lambda_handler(event, context):
+    client = boto3.client('cognito-idp')
+    
+    # Variables de entorno (las mismas que en login/register)
+    CLIENT_ID = os.environ['COGNITO_CLIENT_ID']
+    CLIENT_SECRET = os.environ['COGNITO_CLIENT_SECRET']
+    USER_POOL_ID = os.environ['COGNITO_USER_POOL_ID']
+    
+    try:
+        # Parsear el body de la request
+        body = json.loads(event['body'])
+        
+        # Opción 1: Logout con email (requiere SECRET_HASH)
+        if 'email' in body:
+            email = body['email']
+            secret_hash = calculate_secret_hash(email, CLIENT_ID, CLIENT_SECRET)
+            
+            # Logout global del usuario (invalida todos los tokens)
+            response = client.admin_user_global_sign_out(
+                UserPoolId=USER_POOL_ID,
+                Username=email
+            )
+            
+            return {
+                'statusCode': 200,
+                'headers': {
+                    'Access-Control-Allow-Origin': '*',
+                    'Content-Type': 'application/json'
+                },
+                'body': json.dumps({
+                    'message': 'Logout exitoso. Todos los tokens han sido invalidados.',
+                    'method': 'global_sign_out'
+                })
+            }
+        
+        # Opción 2: Logout con access_token (más común en frontends)
+        elif 'access_token' in body:
+            access_token = body['access_token']
+            
+            # Logout con token específico
+            response = client.global_sign_out(
+                AccessToken=access_token
+            )
+            
+            return {
+                'statusCode': 200,
+                'headers': {
+                    'Access-Control-Allow-Origin': '*',
+                    'Content-Type': 'application/json'
+                },
+                'body': json.dumps({
+                    'message': 'Logout exitoso. Token invalidado.',
+                    'method': 'token_sign_out'
+                })
+            }
+        
+        else:
+            return {
+                'statusCode': 400,
+                'headers': {'Access-Control-Allow-Origin': '*'},
+                'body': json.dumps({
+                    'error': 'Se requiere "email" o "access_token" para hacer logout'
+                })
+            }
+    
+    except client.exceptions.NotAuthorizedException:
+        return {
+            'statusCode': 401,
+            'headers': {'Access-Control-Allow-Origin': '*'},
+            'body': json.dumps({'error': 'Token inválido o expirado'})
+        }
+    
+    except client.exceptions.UserNotFoundException:
+        return {
+            'statusCode': 404,
+            'headers': {'Access-Control-Allow-Origin': '*'},
+            'body': json.dumps({'error': 'Usuario no encontrado'})
+        }
+    
+    except json.JSONDecodeError:
+        return {
+            'statusCode': 400,
+            'headers': {'Access-Control-Allow-Origin': '*'},
+            'body': json.dumps({'error': 'Formato de JSON inválido'})
+        }
+    
+    except KeyError as e:
+        return {
+            'statusCode': 400,
+            'headers': {'Access-Control-Allow-Origin': '*'},
+            'body': json.dumps({'error': f'Campo requerido faltante: {str(e)}'})
+        }
+    
+    except Exception as e:
+        return {
+            'statusCode': 500,
+            'headers': {'Access-Control-Allow-Origin': '*'},
+            'body': json.dumps({'error': f'Error interno del servidor: {str(e)}'})
+        }
+```
+```json
+{
+  "body": "{\"email\": \"test@example.com\"}",
+  "httpMethod": "POST"
+}
+```
+```json
+{
+  "email": "test@example.com"
+}
 ```
 
 ---
@@ -252,14 +619,35 @@ def sign_up(email, password):
 ### HTTP API - add Clouster - API server endpoint
 - **API name**: micropay-api-gateway
   - **Integrations**:
-    - HTTP
+    - Lambda
+    - AWS Region: us-east-1
     - Method: GET
-    - URL endpoint: https:// + user-microservice-LoadBalancer-External-IP + :3000
+    - URL endpoint: arn:aws:lambda:us-east-1:123456789:function:micropay-lambda-register
+  - **Integrations**:
+    - Lambda
+    - AWS Region: us-east-1
+    - Method: GET
+    - URL endpoint: arn:aws:lambda:us-east-1:123456789:function:micropay-lambda-login
+  - **Integrations**:
+    - Lambda
+    - AWS Region: us-east-1
+    - Method: GET
+    - URL endpoint: arn:aws:lambda:us-east-1:123456789:function:micropay-lambda-logout    
 - **Configure routes**:
   - User
-    - **Method**: GET
-    - **Resource path**: /User
-    - **Integration target**: URL endpoint User
+    - **Method**: POST
+    - **Resource path**: /auth/register
+    - **Integration target**: micropay-lambda-register
+- **Configure routes**:
+  - User
+    - **Method**: POST
+    - **Resource path**: /auth/login
+    - **Integration target**: micropay-lambda-login
+- **Configure routes**:
+  - User
+    - **Method**: POST
+    - **Resource path**: /auth/logout
+    - **Integration target**: micropay-lambda-logout
 
 ---
 
@@ -268,29 +656,5 @@ def sign_up(email, password):
 ---
 
 ## **CircuitBreaker**:
-
----
-
-## **SQS**: Simple Queue Service:
-### Create queue
-- **Type**: Standard
-- **Name**: monolitica-sqs
-- **Visibility timeout**: 30 Seconds
-- **Message retention period**: 4 Days
-- **Delivery delay**: 0
-- **Receive message wait time**: 0
-- **Maximum message size**: 1024 KiB
-
----
-
-## **SNS**: Simple Notification Service 
-### Topics
-- **Topics**: Standard
-- **Name**: monolitica-sns
-
-### Create subscription
-- **Topic ARN**: monolitica-sns
-- **Protocol**: Amazon SQS
-- **Endpoint**: monolitica-sqs
 
 ---
