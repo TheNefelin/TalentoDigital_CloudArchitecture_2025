@@ -96,21 +96,155 @@ Diseñar e implementar una arquitectura basada en microservicios con:
 
 # Desarrollo Paso a Paso
 
-### Flujo real de registro
-```Mermaid
-sequenceDiagram
-    participant User as Usuario
-    participant App as API Gateway
-    participant Lambda as Lambda
-    participant Cognito
-
-    User->>App: POST /api/signup {email, password}
-    App->>Lambda: Invoca función
-    Lambda->>Cognito: cognito-idp.sign_up()
-    Cognito-->>Lambda: Usuario creado
-    Lambda-->>User: {message: "Usuario registrado"}
+### Structure
+```
+AWS_Payment_Microservices_Python/
+│
+│── auth_microservice/
+│   ├── .env
+│   ├── .env.dev
+│   ├── Dockerfile
+│   ├── dockerrun.aws.json
+│   ├── main.py
+│   ├── README.md
+│   └── requirements.txt
+│
+│── transaction_microservice/
+│   ├── .env
+│   ├── .env.dev
+│   ├── Dockerfile
+│   ├── dockerrun.aws.json
+│   ├── main.py
+│   ├── README.md
+│   └── requirements.txt
+│
+│── .dockerignore
+│── .gitignore
+│── docker-compose.yml
+│── kubernetes_auth.yaml
+│── kubernetes_transaction.yaml
+│── LICENSE.txt
+│── PostgreSQL.sql
+│── README.md
+└── run_docker_local.bat
 ```
 
+```mermaid
+flowchart TD
+  subgraph Client["Cliente"]
+    WEB[Web App]
+    MOBILE[Mobile App]
+    API_CLIENT[API Client]
+  end
+
+  subgraph AWS_APIGW["AWS API Gateway"]
+    APIGW[HTTP API Gateway<br/>micropay-api-gateway<br/>VPC Link Integration]
+  end
+
+  subgraph EKS_Cluster["EKS Cluster - micropay-eks-microservices"]
+    subgraph Discovery["Service Discovery"]
+      SD[Service Registry<br/>ConfigMap + ClusterIP<br/>Internal K8s DNS]
+    end
+    
+    subgraph Auth_Service["Auth Microservice Pod"]
+      AUTH[auth-microservice<br/>ClusterIP Service<br/>Port 8000<br/>register, login, logout]
+    end
+    
+    subgraph Transaction_Service["Transaction Microservice Pod"]
+      TRANSACTION[transaction-microservice<br/>ClusterIP Service<br/>Port 8000<br/>Transaction History<br/>Balance Management]
+    end
+  end
+
+  subgraph AWS_Data["AWS Data Layer"]
+    RDS[(PostgreSQL RDS<br/>micropay-rds-pgdb<br/>users, transactions)]
+    COGNITO[(AWS Cognito<br/>micropay-cognito<br/>User Pool)]
+  end
+
+  subgraph AWS_Notifications["AWS Notification Services"]
+    SNS[AWS SNS<br/>micropay-sns<br/>Push Notifications]
+    SES[AWS SES<br/>Email Service]
+  end
+
+  subgraph External["External Payment Services"]
+    STRIPE[Stripe API<br/>Payment Processing]
+    PAYPAL[PayPal API<br/>Alternative Payments]
+  end
+
+  %% Client connections
+  WEB --> APIGW
+  MOBILE --> APIGW
+  API_CLIENT --> APIGW
+
+  %% API Gateway to EKS through VPC Link
+  APIGW -->|VPC Link<br/>micropay-vpc-link| AUTH
+  APIGW -->|VPC Link<br/>micropay-vpc-link| TRANSACTION
+
+  %% Internal Service Discovery
+  SD -.->|DNS Resolution| AUTH
+  SD -.->|DNS Resolution| TRANSACTION
+
+  %% Service interactions within cluster
+  AUTH -->|Internal K8s DNS| TRANSACTION
+  TRANSACTION -->|Internal K8s DNS| AUTH
+
+  %% External connections from EKS
+  AUTH --> COGNITO
+  AUTH --> RDS
+  TRANSACTION --> RDS
+  TRANSACTION --> SNS
+  AUTH --> SES
+  TRANSACTION --> STRIPE
+  TRANSACTION --> PAYPAL
+
+  %% Styling
+  classDef auth fill:#e1f5fe,stroke:#01579b
+  classDef service fill:#f3e5f5,stroke:#4a148c
+  classDef data fill:#e8f5e8,stroke:#1b5e20
+  classDef external fill:#fff3e0,stroke:#e65100
+  classDef aws fill:#ff9800,stroke:#e65100
+  classDef eks fill:#2196f3,stroke:#0d47a1
+  
+  class AUTH auth
+  class TRANSACTION service
+  class RDS,COGNITO data
+  class STRIPE,PAYPAL external
+  class APIGW,SNS,SES aws
+  class SD,EKS_Cluster eks
+```
+
+<img src="Portafoio_07.drawio.png">
+
+---
+
+## Preparing Microservice
+- auth_microservice
+```sh
+cd auth_microservice
+python -m venv venv
+venv\Scripts\activate
+pip list
+pip install fastapi uvicorn[standard] sqlalchemy psycopg2-binary boto3 python-dotenv pydantic[email]
+pip freeze > requirements.txt
+uvicorn main:app --reload
+curl http://127.0.0.1:8000  # curl http://127.0.0.1:8000/docs
+pip install -r requirements.txt
+deactivate
+```
+- transaction_microservice
+```sh
+cd transaction_microservice
+python -m venv venv
+venv\Scripts\activate
+pip list
+pip install fastapi uvicorn[standard] sqlalchemy psycopg2-binary boto3 python-dotenv pydantic[email]
+pip freeze > requirements.txt
+uvicorn main:app --reload
+curl http://127.0.0.1:8000  # curl http://127.0.0.1:8000/docs
+pip install -r requirements.txt
+deactivate
+```
+
+# AWS
 ## **Seciruty Group**:
 ### micropay-sg-rds
 - **Name**: micropay-sg-rds
@@ -132,6 +266,48 @@ sequenceDiagram
     - Destination type: Custom
     - Destination: 0.0.0.0/0
     - Description:
+
+### micropay-sg-web
+- **Name**: micropay-sg-web
+- **Description**: Acceso Web
+- **VPC**: default
+- **Inbound rules**:
+  - HTTP
+    - Type: HTTP
+    - Protocol: TCP
+    - Port range: 80
+    - Destination type: Anywhere-IPv4
+    - Destination: 0.0.0.0/0
+    - Description: Acceso Web
+  - Custom TCP
+    - Type: Custom TCP
+    - Protocol: TCP
+    - Port range: 8000
+    - Destination type: Anywhere-IPv4
+    - Destination: 0.0.0.0/0
+    - Description: Acceso Web
+  - PostgreSQL
+    - Type: PostgreSQL
+    - Protocol: TCP
+    - Port range: 5432
+    - Destination type: Anywhere-IPv4
+    - Destination: 0.0.0.0/0
+    - Description: Acceso PostgreSQL
+- **Outbound rules**:
+  - Outbound
+    - Type: All traffic
+    - Protocol: All
+    - Port range: All
+    - Destination type: Custom
+    - Destination: 0.0.0.0/0
+    - Description:
+
+---
+
+## **SNS**: Simple Notification Service 
+### Topics
+- **Topics**: Standard
+- **Name**: micropay-sns
 
 ---
 
@@ -155,69 +331,9 @@ sequenceDiagram
 - **Public access**: Yes
 - **Security groups**: micropay-sg-rds
 - **Monitoring**: Database Insights - Standard
-- **Enhanced Monitoring**: Disabled  
+- **Enable Performance insights**: Disabled  
 
----
-
-## **SQS**: Simple Queue Service:
-### Create queue
-- **Type**: Standard
-- **Name**: micropay-sqs
-- **Visibility timeout**: 30 Seconds
-- **Message retention period**: 4 Days
-- **Delivery delay**: 0
-- **Receive message wait time**: 0
-- **Maximum message size**: 1024 KiB
-
----
-
-## **SNS**: Simple Notification Service 
-### Topics
-- **Topics**: Standard
-- **Name**: micropay-sns
-
-### Create subscription
-- **Topic ARN**: micropay-sns
-- **Protocol**: Amazon SQS
-- **Endpoint**: micropay-sqs
-
----
-
-## **ECR**: Elastic Container Registry
-### Repositorio - products-service-repo
-- **Repository name**: micropay-repo-notification
-- **Image tag mutability**: Mutable
-- **Mutable tag exclusions**:
-- **Encryption configuration**: AES-256
-- **View push commands**
-
----
-
-## **EKS**: Elastic Kubernetes Service
-### Clusters
-- **Configuration options**: Custom configuration
-- **Use EKS Auto Mode**_ uncheck
-- **Name**: micropay
-- **Cluster IAM role**: LabEksClusterRole
-- **EKS API**: check
-- **ARC Zonal shift**: disabled
-- **VPC**: default
-- **Subnets**: default
-- **Additional security groups**: micropay-sg-service
-- **Cluster endpoint access**: Public and private
-
-### Clusters - Compute - Add node group
-- **Name**: ng-general
-- **Node IAM role**: LabRole
-- **AMI type**: Amazon Linux 2023 (x86_64)
-- **Instance types**: t3.medium
-- **Disk size**: 20 GiB
-- **Desired size**: 2
-- **Minimum size**: 2
-- **Maximum size**: 4
-- **Subnets** default
-
-### Clusters - Resources - Workload ???
+### [PostgreSQL.sql](PostgreSQL.sql)
 
 ---
 
@@ -239,422 +355,147 @@ sequenceDiagram
 
 ---
 
-## **Lambda**: Auth Register
-### Lambda Register
-- **Function name**: micropay-lambda-register
-- **Runtime**: Python 3.13
-- **Architecture**: x86_64
-- **Execution role**: LabRole
+## **ECR**: Elastic Container Registry
+### Repositorio - products-service-repo
+- **Repository name**: micropay-auth-service-repo
+- **Image tag mutability**: Mutable
+- **Mutable tag exclusions**:
+- **Encryption configuration**: AES-256
+- **View push commands**
 
-### Environment variable
-- **COGNITO_CLIENT_ID**: COGNITO_CLIENT_ID
-- **COGNITO_CLIENT_SECRET**: COGNITO_CLIENT_SECRET
-- **COGNITO_USER_POOL_ID**: COGNITO_USER_POOL_ID
+## **ECR**: Elastic Container Registry
+### Repositorio - products-service-repo
+- **Repository name**: micropay-transaction-service-repo
+- **Image tag mutability**: Mutable
+- **Mutable tag exclusions**:
+- **Encryption configuration**: AES-256
+- **View push commands**
 
-```py
-import boto3
-import json
-import os
-import hmac
-import hashlib
-import base64
+---
 
-def calculate_secret_hash(username, client_id, client_secret):
-    message = username + client_id
-    dig = hmac.new(
-        client_secret.encode('utf-8'),
-        msg=message.encode('utf-8'),
-        digestmod=hashlib.sha256
-    ).digest()
-    return base64.b64encode(dig).decode()
-
-def lambda_handler(event, context):
-    client = boto3.client('cognito-idp')
-    
-    CLIENT_ID = os.environ['COGNITO_CLIENT_ID']
-    CLIENT_SECRET = os.environ['COGNITO_CLIENT_SECRET']
-    USER_POOL_ID = os.environ['COGNITO_USER_POOL_ID']
-    
-    body = json.loads(event['body'])
-    email = body['email']
-    password = body['password']
-    
-    secret_hash = calculate_secret_hash(email, CLIENT_ID, CLIENT_SECRET)
-    
-    try:
-        # 1. Registrar usuario
-        response = client.sign_up(
-            ClientId=CLIENT_ID,
-            Username=email,
-            Password=password,
-            SecretHash=secret_hash,
-            UserAttributes=[{'Name': 'email', 'Value': email}]
-        )
-        
-        # 2. ✅ VERIFICAR ADMINISTRATIVAMENTE (sin código)
-        client.admin_confirm_sign_up(
-            UserPoolId=USER_POOL_ID,
-            Username=email
-        )
-        
-        # 3. ✅ MARCAR EMAIL COMO VERIFICADO
-        client.admin_update_user_attributes(
-            UserPoolId=USER_POOL_ID,
-            Username=email,
-            UserAttributes=[
-                {'Name': 'email_verified', 'Value': 'true'}
-            ]
-        )
-        
-        return {
-            'statusCode': 200,
-            'headers': {'Access-Control-Allow-Origin': '*'},
-            'body': json.dumps({
-                'message': 'Usuario registrado y verificado automáticamente',
-                'userSub': response['UserSub']
-            })
-        }
-        
-    except client.exceptions.UsernameExistsException:
-        return {
-            'statusCode': 400,
-            'headers': {'Access-Control-Allow-Origin': '*'},
-            'body': json.dumps({'error': 'El usuario ya existe'})
-        }
-    except Exception as e:
-        return {
-            'statusCode': 400,
-            'headers': {'Access-Control-Allow-Origin': '*'},
-            'body': json.dumps({'error': str(e)})
-        }
+## **CloudShell**:
+### Consola CloudShell
+```sh
+docker system prune -a --volumes -f
+docker builder prune -f
+df -h
 ```
-```json
-{
-  "body": "{\"email\": \"test@example.com\", \"password\": \"Password123!\"}",
-  "httpMethod": "POST"
-}
+```sh
+git clone https://github.com/TheNefelin/AWS_Payment_Microservices_Python.git
+cd AWS_Payment_Microservices_Python
 ```
-```json
-{
-  "email": "test@example.com", 
-  "password": "Password123!"
-}
+```sh
+aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 123.dkr.ecr.us-east-1.amazonaws.com
+```
+```sh
+docker build -f auth_microservice/Dockerfile -t micropay-auth-service-repo ./auth_microservice
+docker tag micropay-auth-service-repo:latest 123.dkr.ecr.us-east-1.amazonaws.com/micropay-auth-service-repo:latest
+docker push 123.dkr.ecr.us-east-1.amazonaws.com/micropay-auth-service-repo:latest
+```
+```sh
+docker build -f transaction_microservice/Dockerfile -t micropay-transaction-service-repo ./transaction_microservice
+docker tag micropay-transaction-service-repo:latest 123.dkr.ecr.us-east-1.amazonaws.com/micropay-transaction-service-repo:latest
+docker push 123.dkr.ecr.us-east-1.amazonaws.com/micropay-transaction-service-repo:latest
+```
+```sh
+docker images
+cd ..
+rm -rf AWS_Payment_Microservices_Python
 ```
 
-## **Lambda**: Auth Login
-### Lambda Login
-- **Function name**: micropay-lambda-login
-- **Runtime**: Python 3.13
-- **Architecture**: x86_64
-- **Execution role**: LabRole
+---
 
-### Environment variable
-- **COGNITO_CLIENT_ID**: COGNITO_CLIENT_ID
-- **COGNITO_CLIENT_SECRET**: COGNITO_CLIENT_SECRET
-- **COGNITO_USER_POOL_ID**: COGNITO_USER_POOL_ID
+## **EKS**: Elastic Kubernetes Service
+### Clusters
+- **Configuration options**: Custom configuration
+- **Use EKS Auto Mode**_ uncheck
+- **Name**: micropay-eks-microservices
+- **Cluster IAM role**: LabEksClusterRole
+- **EKS API**: check
+- **ARC Zonal shift**: disabled
+- **VPC**: default
+- **Subnets**: default
+- **Additional security groups**: micropay-sg-web
+- **Cluster endpoint access**: Public and private
 
-```py
-import boto3
-import json
-import os
-import hmac
-import hashlib
-import base64
+### Clusters - Compute - Add node group
+- **Name**: ng-general
+- **Node IAM role**: LabRole
+- **AMI type**: Amazon Linux 2023 (x86_64)
+- **Instance types**: t3.medium
+- **Disk size**: 20 GiB
+- **Desired size**: 2
+- **Minimum size**: 2
+- **Maximum size**: 4
+- **Subnets** default
 
-# Calcular SECRET_HASH (igual que en registro)
-def calculate_secret_hash(username, client_id, client_secret):
-    message = username + client_id
-    dig = hmac.new(
-        client_secret.encode('utf-8'),
-        msg=message.encode('utf-8'),
-        digestmod=hashlib.sha256
-    ).digest()
-    return base64.b64encode(dig).decode()
+---
 
-def lambda_handler(event, context):
-    client = boto3.client('cognito-idp')
-    
-    # Obtener configuración desde variables de entorno
-    CLIENT_ID = os.environ['COGNITO_CLIENT_ID']
-    CLIENT_SECRET = os.environ['COGNITO_CLIENT_SECRET']
-    USER_POOL_ID = os.environ['COGNITO_USER_POOL_ID']
-    
-    try:
-        # Parsear el body de la request
-        body = json.loads(event['body'])
-        email = body['email']
-        password = body['password']
-        
-        # Calcular secret hash (OBLIGATORIO porque tienes Client Secret)
-        secret_hash = calculate_secret_hash(email, CLIENT_ID, CLIENT_SECRET)
-        
-        # Hacer login con Cognito
-        response = client.admin_initiate_auth(
-            UserPoolId=USER_POOL_ID,
-            ClientId=CLIENT_ID,
-            AuthFlow='ADMIN_NO_SRP_AUTH',
-            AuthParameters={
-                'USERNAME': email,
-                'PASSWORD': password,
-                'SECRET_HASH': secret_hash
-            }
-        )
-        
-        # Extraer tokens de la respuesta
-        auth_result = response['AuthenticationResult']
-        
-        # Respuesta exitosa
-        return {
-            'statusCode': 200,
-            'headers': {
-                'Access-Control-Allow-Origin': '*',
-                'Content-Type': 'application/json'
-            },
-            'body': json.dumps({
-                'message': 'Login exitoso',
-                'access_token': auth_result['AccessToken'],
-                'refresh_token': auth_result['RefreshToken'],
-                'expires_in': auth_result['ExpiresIn'],
-                'token_type': auth_result['TokenType']
-            })
-        }
-        
-    except client.exceptions.NotAuthorizedException:
-        return {
-            'statusCode': 401,
-            'headers': {'Access-Control-Allow-Origin': '*'},
-            'body': json.dumps({'error': 'Email o contraseña incorrectos'})
-        }
-    except client.exceptions.UserNotFoundException:
-        return {
-            'statusCode': 404,
-            'headers': {'Access-Control-Allow-Origin': '*'},
-            'body': json.dumps({'error': 'Usuario no encontrado'})
-        }
-    except client.exceptions.UserNotConfirmedException:
-        return {
-            'statusCode': 403,
-            'headers': {'Access-Control-Allow-Origin': '*'},
-            'body': json.dumps({'error': 'Usuario no verificado. Revisa tu email para verificar la cuenta.'})
-        }
-    except json.JSONDecodeError:
-        return {
-            'statusCode': 400,
-            'headers': {'Access-Control-Allow-Origin': '*'},
-            'body': json.dumps({'error': 'Formato de JSON inválido'})
-        }
-    except KeyError as e:
-        return {
-            'statusCode': 400,
-            'headers': {'Access-Control-Allow-Origin': '*'},
-            'body': json.dumps({'error': f'Falta campo requerido: {str(e)}'})
-        }
-    except Exception as e:
-        return {
-            'statusCode': 500,
-            'headers': {'Access-Control-Allow-Origin': '*'},
-            'body': json.dumps({'error': f'Error interno del servidor: {str(e)}'})
-        }
+## **CloudShell**:
+### Consola CloudShell
+- Uploda Kunernetes file (kubernetes_auth.yaml) (kubernetes_transaction.yaml)
+- Update Kubernetes Config (Connect kubectl to EKS)
+```sh
+aws eks update-kubeconfig --name micropay-eks-microservices --region us-east-1
 ```
-```json
-{
-  "body": "{\"email\": \"test@example.com\", \"password\": \"Password123!\"}",
-  "httpMethod": "POST"
-}
+```sh
+kubectl get nodes
 ```
-```json
-{
-  "email": "test@example.com", 
-  "password": "Password123!"
-}
+```sh
+kubectl apply -f kubernetes_auth.yaml
+kubectl apply -f kubernetes_transaction.yaml
 ```
-
-## **Lambda**: Auth logout
-### Lambda Register
-- **Function name**: micropay-lambda-logout
-- **Runtime**: Python 3.13
-- **Architecture**: x86_64
-- **Execution role**: LabRole
-
-### Environment variable
-- **COGNITO_CLIENT_ID**: COGNITO_CLIENT_ID
-- **COGNITO_CLIENT_SECRET**: COGNITO_CLIENT_SECRET
-- **COGNITO_USER_POOL_ID**: COGNITO_USER_POOL_ID
-
-```py
-import boto3
-import json
-import os
-import hmac
-import hashlib
-import base64
-
-def calculate_secret_hash(username, client_id, client_secret):
-    """
-    Calcula el SECRET_HASH requerido por Cognito cuando el cliente tiene Client Secret
-    """
-    message = username + client_id
-    dig = hmac.new(
-        client_secret.encode('utf-8'),
-        msg=message.encode('utf-8'),
-        digestmod=hashlib.sha256
-    ).digest()
-    return base64.b64encode(dig).decode()
-
-def lambda_handler(event, context):
-    client = boto3.client('cognito-idp')
-    
-    # Variables de entorno (las mismas que en login/register)
-    CLIENT_ID = os.environ['COGNITO_CLIENT_ID']
-    CLIENT_SECRET = os.environ['COGNITO_CLIENT_SECRET']
-    USER_POOL_ID = os.environ['COGNITO_USER_POOL_ID']
-    
-    try:
-        # Parsear el body de la request
-        body = json.loads(event['body'])
-        
-        # Opción 1: Logout con email (requiere SECRET_HASH)
-        if 'email' in body:
-            email = body['email']
-            secret_hash = calculate_secret_hash(email, CLIENT_ID, CLIENT_SECRET)
-            
-            # Logout global del usuario (invalida todos los tokens)
-            response = client.admin_user_global_sign_out(
-                UserPoolId=USER_POOL_ID,
-                Username=email
-            )
-            
-            return {
-                'statusCode': 200,
-                'headers': {
-                    'Access-Control-Allow-Origin': '*',
-                    'Content-Type': 'application/json'
-                },
-                'body': json.dumps({
-                    'message': 'Logout exitoso. Todos los tokens han sido invalidados.',
-                    'method': 'global_sign_out'
-                })
-            }
-        
-        # Opción 2: Logout con access_token (más común en frontends)
-        elif 'access_token' in body:
-            access_token = body['access_token']
-            
-            # Logout con token específico
-            response = client.global_sign_out(
-                AccessToken=access_token
-            )
-            
-            return {
-                'statusCode': 200,
-                'headers': {
-                    'Access-Control-Allow-Origin': '*',
-                    'Content-Type': 'application/json'
-                },
-                'body': json.dumps({
-                    'message': 'Logout exitoso. Token invalidado.',
-                    'method': 'token_sign_out'
-                })
-            }
-        
-        else:
-            return {
-                'statusCode': 400,
-                'headers': {'Access-Control-Allow-Origin': '*'},
-                'body': json.dumps({
-                    'error': 'Se requiere "email" o "access_token" para hacer logout'
-                })
-            }
-    
-    except client.exceptions.NotAuthorizedException:
-        return {
-            'statusCode': 401,
-            'headers': {'Access-Control-Allow-Origin': '*'},
-            'body': json.dumps({'error': 'Token inválido o expirado'})
-        }
-    
-    except client.exceptions.UserNotFoundException:
-        return {
-            'statusCode': 404,
-            'headers': {'Access-Control-Allow-Origin': '*'},
-            'body': json.dumps({'error': 'Usuario no encontrado'})
-        }
-    
-    except json.JSONDecodeError:
-        return {
-            'statusCode': 400,
-            'headers': {'Access-Control-Allow-Origin': '*'},
-            'body': json.dumps({'error': 'Formato de JSON inválido'})
-        }
-    
-    except KeyError as e:
-        return {
-            'statusCode': 400,
-            'headers': {'Access-Control-Allow-Origin': '*'},
-            'body': json.dumps({'error': f'Campo requerido faltante: {str(e)}'})
-        }
-    
-    except Exception as e:
-        return {
-            'statusCode': 500,
-            'headers': {'Access-Control-Allow-Origin': '*'},
-            'body': json.dumps({'error': f'Error interno del servidor: {str(e)}'})
-        }
+```sh
+kubectl get all
 ```
-```json
-{
-  "body": "{\"email\": \"test@example.com\"}",
-  "httpMethod": "POST"
-}
+- Opcional
+```sh
+kubectl delete all --all
+kubectl delete configmap --all
+kubectl delete secret --all
 ```
-```json
-{
-  "email": "test@example.com"
-}
+- Cómo obtener estas URLs en tu cluster
+- http://<nombre-servicio>.<namespace>.svc.cluster.local:<puerto>
+```sh
+# Ver todos los servicios en todos los namespaces
+kubectl get svc --all-namespaces
+# Ver servicios en el namespace default (donde tienes tus microservicios)
+kubectl get svc -n default
+# Ver detalles específicos de un servicio
+kubectl describe svc auth-microservice -n default
+kubectl describe svc transaction-microservice -n default
 ```
-
+- Auth Microservice
+http://auth-microservice.default.svc.cluster.local:8000
+- Transaction Microservice  
+http://transaction-microservice.default.svc.cluster.local:8000
 ---
 
 ## **Api Gateway**:
-### HTTP API - add Clouster - API server endpoint
+- **Choose an API type**: HTTP API
 - **API name**: micropay-api-gateway
-  - **Integrations**:
-    - Lambda
-    - AWS Region: us-east-1
-    - Method: GET
-    - URL endpoint: arn:aws:lambda:us-east-1:123456789:function:micropay-lambda-register
-  - **Integrations**:
-    - Lambda
-    - AWS Region: us-east-1
-    - Method: GET
-    - URL endpoint: arn:aws:lambda:us-east-1:123456789:function:micropay-lambda-login
-  - **Integrations**:
-    - Lambda
-    - AWS Region: us-east-1
-    - Method: GET
-    - URL endpoint: arn:aws:lambda:us-east-1:123456789:function:micropay-lambda-logout    
-- **Configure routes**:
-  - User
-    - **Method**: POST
-    - **Resource path**: /auth/register
-    - **Integration target**: micropay-lambda-register
-- **Configure routes**:
-  - User
-    - **Method**: POST
-    - **Resource path**: /auth/login
-    - **Integration target**: micropay-lambda-login
-- **Configure routes**:
-  - User
-    - **Method**: POST
-    - **Resource path**: /auth/logout
-    - **Integration target**: micropay-lambda-logout
+
+### Api Gateway - VPC links
+- **Choose a VPC link version**: VPC link for HTTP APIs
+- **Name**: micropay-vpc-link
+- **VPC**: default
+- **Subnets**: default
+- **Security groups**: micropay-sg-web
+
+### Api Gateway - Integrations
+- **Attach this integration to a route**: http://10.100.127.183:8000
+- **Integration type**: Private resource
+- **VPC link**: micropay-vpc-link
 
 ---
 
-## **ServiceDiscovery**: AWSCloudMap
+## **EB**: Elastic Beanstalk (opcional 2)
+- auth_microservice
+[ECR + EB + auth microservice](/auth_microservice/Dockerfile)
+[Dockerrun.aws.json](/auth_microservice/Dockerrun.aws.json)
 
----
-
-## **CircuitBreaker**:
+- transaction_microservice
+[ECR + EB + transaction microservice](/transaction_microservice/Dockerfile)
+[Dockerrun.aws.json](/transaction_microservice/Dockerrun.aws.json)
 
 ---
