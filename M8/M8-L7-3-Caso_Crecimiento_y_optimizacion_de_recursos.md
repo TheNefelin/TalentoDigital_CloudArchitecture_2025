@@ -140,5 +140,3 @@ aws apigateway flush-stage-cache --rest-api-id <api-id> --stage-name <stage>
 ```
 
 ---
-
-*¿Quieres que convierta este .md a PDF/DOCX y lo adjunte aquí? También puedo personalizar los umbrales y el presupuesto si me das los números históricos.*
