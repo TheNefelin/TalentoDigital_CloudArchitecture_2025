@@ -188,6 +188,3 @@ TDD script example (`check_cloudtrail.sh`) included in `scripts/`.
 - Run tabletop incident response exercises quarterly.
 
 ---
-
-### Entrego este documento en formato Markdown.  
-Si quieres, convierto a PDF/DOCX y genero el repositorio base con plantillas CloudFormation y scripts listos para ejecutar en tu AWS Academy account.
